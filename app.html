@@ -1,0 +1,2441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FixVisit Report — Visit Report Builder</title>
+<style>
+  :root{
+    --ink:#2a211a; --muted:#6f6156; --brand:#dd6212; --brand-dark:#b34d0a;
+    --bg:#faf7f3; --card:#ffffff; --line:#e7dccf; --accent:#fdeee0;
+    --warn-bg:#fdf0e6; --warn-ink:#8a4b12; --warn-line:#f0c491;
+    --bad-bg:#fdecec; --bad-ink:#9f2727;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+       background:var(--bg); color:var(--ink); line-height:1.5;}
+  .wrap{max-width:1020px; margin:0 auto; padding:0 20px 48px;}
+  header{background:var(--ink); color:#fff; margin-bottom:28px;}
+  header .inner{max-width:1020px; margin:0 auto; padding:16px 20px; display:flex;
+                align-items:center; justify-content:space-between;}
+  .logo{font-size:22px; font-weight:800;}
+  .logo span{color:#f59a4e;}
+  .logo-tag{font-size:12px; font-weight:600; letter-spacing:.4px; color:#cbb9a6; margin-top:1px;}
+  header a{color:#fff; text-decoration:none; font-weight:600; font-size:15px;}
+  header a:hover{text-decoration:underline;}
+  h1{font-size:26px; margin-bottom:4px;}
+  .sub{color:var(--muted); margin-bottom:22px;}
+  .grid{display:grid; grid-template-columns:1fr 1fr; gap:20px; align-items:start;}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:10px; padding:22px;}
+  .card h2{font-size:18px; margin-bottom:16px;}
+  .card h2 .pro-tag{display:inline-block; background:var(--ink); color:#fff; font-size:11px;
+                    font-weight:800; letter-spacing:.4px; padding:2px 8px; border-radius:20px;
+                    vertical-align:middle; margin-left:8px;}
+  .field{margin-bottom:14px;}
+  .field label{display:block; font-size:14px; font-weight:600; margin-bottom:5px;}
+  .field .hint{font-weight:400; color:var(--muted); font-size:12.5px;}
+  .field input[type=text], .field input[type=number], .field input[type=email], .field input[type=tel],
+  .field input[type=date], .field input[type=time], .field textarea, .field select{
+    width:100%; padding:10px 12px; font-size:16px; border:1px solid var(--line);
+    border-radius:7px; background:#fff; color:var(--ink);}
+  .field input:focus, .field textarea:focus, .field select:focus{outline:2px solid var(--brand); outline-offset:0; border-color:var(--brand);}
+  .row2{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  .check{display:flex; align-items:flex-start; gap:9px; padding:7px 0; font-size:15.5px; cursor:pointer;}
+  .check input{width:20px; height:20px; margin-top:2px; accent-color:var(--brand); flex:none;}
+  .result-row{display:flex; justify-content:space-between; align-items:baseline;
+              padding:9px 0; border-bottom:1px solid var(--line); font-size:15.5px;}
+  .result-row:last-of-type{border-bottom:none;}
+  .result-row .lbl{color:var(--muted);}
+  .result-row .val{font-weight:700; font-variant-numeric:tabular-nums;}
+  .result-row.big{padding:14px 0;}
+  .result-row.big .lbl{color:var(--ink); font-weight:700; font-size:17px;}
+  .result-row.big .val{font-size:26px; color:var(--brand-dark);}
+  .warning{display:none; background:var(--warn-bg); border:1px solid var(--warn-line);
+           color:var(--warn-ink); border-radius:8px; padding:12px 14px; font-size:14.5px; margin-top:14px;}
+  .btn{display:inline-block; padding:12px 22px; border-radius:8px; font-size:16px; font-weight:700;
+       border:2px solid transparent; cursor:pointer; text-decoration:none; text-align:center;}
+  .btn-primary{background:var(--brand); color:#fff; width:100%;}
+  .btn-primary:hover{background:var(--brand-dark);}
+  .btn-ghost{background:#fff; color:var(--brand-dark); border-color:var(--brand);}
+  .btn-ghost:hover{background:var(--accent);}
+  .btn-small{padding:6px 12px; font-size:13.5px; border-radius:6px;}
+  .btn[disabled]{opacity:.45; cursor:not-allowed;}
+  .stack{display:grid; gap:20px;}
+  .fineprint{color:var(--muted); font-size:13px; margin-top:12px;}
+  .data-note{background:var(--warn-bg); border:1px solid var(--warn-line); color:var(--warn-ink);
+             border-radius:8px; padding:12px 14px; font-size:14.5px;}
+  .data-row{display:flex; gap:10px; flex-wrap:wrap; margin-top:14px;}
+  /* Work item cards (built on the sibling "room" card) */
+  .room{border:1px solid var(--line); border-radius:10px; padding:16px 18px; margin-bottom:16px; background:#fff;}
+  .room-head{display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-bottom:6px;}
+  .room-head h3{font-size:17px;}
+  .photos-label{font-size:13px; font-weight:700; color:var(--muted); margin-top:12px;}
+  .photos{display:flex; flex-wrap:wrap; gap:8px; margin-top:8px;}
+  .thumb{position:relative; width:76px; height:76px; border-radius:8px; overflow:hidden; border:1px solid var(--line); background:var(--bg);}
+  .thumb img{width:100%; height:100%; object-fit:cover; display:block;}
+  .thumb button{position:absolute; top:2px; right:2px; width:22px; height:22px; border-radius:50%;
+                border:none; background:rgba(42,33,26,.85); color:#fff; font-size:13px; line-height:1; cursor:pointer;}
+  .photo-add{display:inline-block; margin-top:8px; font-size:14px; font-weight:700; color:var(--brand-dark);
+             border:1.5px dashed var(--brand); border-radius:8px; padding:8px 14px; cursor:pointer;}
+  /* Parts rows */
+  .part-row{display:grid; grid-template-columns:1fr 64px 92px 76px 30px; gap:8px; align-items:center; margin-bottom:8px;}
+  .part-row input{width:100%; padding:9px 10px; font-size:15px; border:1px solid var(--line); border-radius:7px; background:#fff; color:var(--ink);}
+  .part-row .part-line{font-weight:700; font-variant-numeric:tabular-nums; text-align:right; font-size:14.5px;}
+  .part-head{display:grid; grid-template-columns:1fr 64px 92px 76px 30px; gap:8px; font-size:12px; font-weight:700; color:var(--muted); margin-bottom:6px;}
+  /* Chips */
+  .chip{font-size:11.5px; font-weight:800; letter-spacing:.3px; padding:2px 8px; border-radius:20px; white-space:nowrap;}
+  .chip-ready{background:var(--accent); color:var(--brand-dark);}
+  .chip-notready{background:var(--bad-bg); color:var(--bad-ink);}
+  .chip-sev-Low{background:#eef2f6; color:var(--muted);}
+  .chip-sev-Medium{background:var(--warn-bg); color:var(--warn-ink);}
+  .chip-sev-High{background:var(--bad-bg); color:var(--bad-ink);}
+  .chip-status{background:#eef2f6; color:var(--ink);}
+  .verdict-big{font-size:21px; font-weight:800;}
+  .verdict-big.yes{color:var(--brand-dark);}
+  .verdict-big.no{color:var(--bad-ink);}
+  /* Saved items / history / issues */
+  .saved-list{margin-top:14px;}
+  .saved-item{display:flex; align-items:center; gap:8px; padding:9px 0; border-bottom:1px solid var(--line); flex-wrap:wrap;}
+  .saved-item:last-child{border-bottom:none;}
+  .saved-item .name{flex:1; min-width:120px; font-weight:600; font-size:15px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .saved-item .meta{color:var(--muted); font-size:12.5px;}
+  .saved-item select.pay-status{padding:6px 8px; font-size:13.5px; border:1px solid var(--line); border-radius:6px; background:#fff; color:var(--ink);}
+  .saved-item .pay-lbl{font-size:12.5px; color:var(--muted); font-weight:600;}
+  .empty-note{color:var(--muted); font-size:14.5px;}
+  .issue-item{display:flex; gap:8px; align-items:flex-start; padding:10px 0; border-bottom:1px solid var(--line); flex-wrap:wrap;}
+  .issue-item:last-child{border-bottom:none;}
+  .issue-item .txt{flex:1; min-width:180px; font-size:14.5px;}
+  .issue-item .txt .where{color:var(--muted); font-size:13px;}
+  .pack-note{flex-basis:100%; color:var(--brand-dark); font-weight:600;}
+  .x-btn{background:none; border:none; color:var(--bad-ink); font-size:16px; cursor:pointer; padding:2px 6px; font-weight:700;}
+  .add-row{display:flex; gap:8px; flex-wrap:wrap;}
+  .add-row input{flex:1; min-width:150px; padding:10px 12px; font-size:15.5px; border:1px solid var(--line); border-radius:7px;}
+  /* Report preview */
+  .preview-wrap{position:relative; border:1px solid var(--line); border-radius:6px; background:#fff;
+                padding:22px 24px; overflow:hidden;}
+  .preview-watermark{position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+                pointer-events:none;}
+  .preview-watermark span{font-size:52px; font-weight:800; letter-spacing:6px; color:rgba(42,33,26,.08);
+                transform:rotate(-18deg);}
+  .preview-wrap .pv-co{font-size:18px; font-weight:800;}
+  .preview-wrap .pv-title{font-size:15px; font-weight:700; margin-top:10px;}
+  .preview-wrap .pv-line{font-size:14px; color:var(--ink); padding:2px 0;}
+  .preview-wrap .pv-line.mut{color:var(--muted);}
+  .preview-wrap .pv-line.head{font-weight:700; margin-top:10px;}
+  .preview-wrap .pv-line.total{font-weight:800; font-size:15px; border-top:1.5px solid var(--ink); margin-top:6px; padding-top:6px;}
+  .preview-wrap .pv-verdict{font-size:16px; font-weight:800; margin-top:8px;}
+  .preview-wrap .pv-verdict.yes{color:var(--brand-dark);}
+  .preview-wrap .pv-verdict.no{color:var(--bad-ink);}
+  @media (max-width:820px){ .grid{grid-template-columns:1fr;} .row2{grid-template-columns:1fr;}
+    .part-row,.part-head{grid-template-columns:1fr 52px 78px 64px 26px;} }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="inner">
+    <div>
+      <div class="logo">FixVisit <span>Report</span></div>
+      <div class="logo-tag">Property Maintenance Visit Reports</div>
+    </div>
+    <a href="index.html">← Back to home</a>
+  </div>
+</header>
+
+<div class="wrap">
+  <h1>Visit report builder</h1>
+  <p class="sub">Build the visit you're on: add the work order and unit, clock in, give each work item a status, photograph before and after, log issues, and itemize the charges — then send the property manager a report they can approve for payment. The builder is free for your current visit, and your first branded PDF report is free too — Pro adds unlimited reports, evidence packs, visit history with payment tracking, and backup.</p>
+
+  <div class="grid">
+    <!-- LEFT column -->
+    <div class="stack">
+      <div class="card">
+        <h2>Your company</h2>
+        <div class="field">
+          <label for="companyName">Company name <span class="hint">— printed on the report</span></label>
+          <input type="text" id="companyName" placeholder="e.g. Reyes Handyman Services LLC" autocomplete="off">
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label for="companyPhone">Phone <span class="hint">— optional</span></label>
+            <input type="tel" id="companyPhone" placeholder="e.g. (916) 555-0142" autocomplete="off">
+          </div>
+          <div class="field">
+            <label for="companyEmail">Email <span class="hint">— optional</span></label>
+            <input type="email" id="companyEmail" placeholder="e.g. jobs@yourcompany.com" autocomplete="off">
+          </div>
+        </div>
+        <div class="field" style="margin-bottom:0;">
+          <label for="logoInput">Company logo <span class="hint">— PNG or JPG, shown on the PDF report</span></label>
+          <input type="file" id="logoInput" accept="image/png,image/jpeg">
+          <p class="fineprint" id="logoStatus">No logo uploaded.</p>
+          <button class="btn btn-ghost btn-small" id="removeLogoBtn" type="button" style="display:none;">Remove logo</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>This visit</h2>
+        <div class="field">
+          <label for="profilePicker">Saved client / property <span class="hint">— your regulars, saved once, reused every visit</span></label>
+          <select id="profilePicker">
+            <option value="">— Choose a saved client / property —</option>
+          </select>
+        </div>
+        <div class="data-row" style="margin:0 0 16px;">
+          <button class="btn btn-ghost btn-small" id="saveProfileBtn" type="button">Save current client / property</button>
+          <button class="btn btn-ghost btn-small" id="deleteProfileBtn" type="button">Delete selected profile</button>
+        </div>
+        <div class="field">
+          <label for="clientName">Client name <span class="hint">— property manager, landlord, or homeowner</span></label>
+          <input type="text" id="clientName" placeholder="e.g. Harborview Property Management" autocomplete="off">
+        </div>
+        <div class="field">
+          <label for="propertyAddress">Property address <span class="hint">— shown on the report</span></label>
+          <input type="text" id="propertyAddress" placeholder="e.g. 1180 Elm St" autocomplete="off">
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label for="unit">Unit # <span class="hint">— optional</span></label>
+            <input type="text" id="unit" placeholder="e.g. 4B" autocomplete="off">
+          </div>
+          <div class="field">
+            <label for="workOrder">Work order # <span class="hint">— optional</span></label>
+            <input type="text" id="workOrder" placeholder="e.g. WO-2481" autocomplete="off">
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label for="poNumber">PO # <span class="hint">— optional</span></label>
+            <input type="text" id="poNumber" placeholder="e.g. PO-1042" autocomplete="off">
+          </div>
+          <div class="field">
+            <label for="invoiceRef">Invoice reference <span class="hint">— optional</span></label>
+            <input type="text" id="invoiceRef" placeholder="e.g. INV-2026-118" autocomplete="off">
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label for="visitDate">Visit date</label>
+            <input type="date" id="visitDate">
+          </div>
+          <div class="field">
+            <label for="visitType">Visit type</label>
+            <select id="visitType">
+              <option>Service call</option>
+              <option>Repair</option>
+              <option>Maintenance</option>
+              <option>Inspection</option>
+              <option>Follow-up</option>
+            </select>
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label for="arrivalTime">Arrival time</label>
+            <input type="time" id="arrivalTime">
+          </div>
+          <div class="field">
+            <label for="departureTime">Departure time</label>
+            <input type="time" id="departureTime">
+          </div>
+        </div>
+        <div class="field">
+          <label for="paymentTermsMode">Payment terms <span class="hint">— printed next to the amount due</span></label>
+          <select id="paymentTermsMode">
+            <option value="due">Due on receipt</option>
+            <option value="net15">Net 15</option>
+            <option value="net30">Net 30</option>
+            <option value="custom">Custom…</option>
+          </select>
+        </div>
+        <div class="field" id="paymentTermsCustomWrap" style="display:none;">
+          <label for="paymentTermsCustom">Custom payment terms</label>
+          <input type="text" id="paymentTermsCustom" placeholder="e.g. Due within 45 days of invoice date" autocomplete="off">
+        </div>
+        <div class="field">
+          <label for="ackMode">Report acknowledgment <span class="hint">— how this report gets signed off</span></label>
+          <select id="ackMode">
+            <option value="onsite">Customer signature on site</option>
+            <option value="manager">Property manager acknowledgment</option>
+            <option value="remote">Remote approval — submit for approval (no signature)</option>
+          </select>
+        </div>
+        <button class="btn btn-ghost" id="newVisitBtn" type="button" style="width:100%;">Start a fresh visit</button>
+        <p class="fineprint">Free plan: one visit at a time — the visit you're building is kept in this browser as you work, so an interruption doesn't lose it. Pro saves finished visits to your history.</p>
+      </div>
+
+      <div class="card">
+        <h2>Parts &amp; charges</h2>
+        <div class="part-head"><span>Part / material</span><span>Qty</span><span>Unit $</span><span style="text-align:right;">Line</span><span></span></div>
+        <div id="partsBox"></div>
+        <button class="btn btn-ghost btn-small" id="addPartBtn" type="button">Add a part</button>
+        <div class="row2" style="margin-top:16px;">
+          <div class="field">
+            <label for="laborHours">Labor hours</label>
+            <input type="number" id="laborHours" min="0" step="0.25" value="0">
+          </div>
+          <div class="field">
+            <label for="laborRate">Labor rate ($/hr)</label>
+            <input type="number" id="laborRate" min="0" step="1" value="0">
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label for="tripFee">Trip / call-out fee ($)</label>
+            <input type="number" id="tripFee" min="0" step="1" value="0">
+          </div>
+          <div class="field">
+            <label for="taxPct">Tax % <span class="hint">— optional, on the subtotal</span></label>
+            <input type="number" id="taxPct" min="0" step="0.1" value="0">
+          </div>
+        </div>
+        <div class="result-row"><span class="lbl">Parts total</span><span class="val" id="chParts">$0.00</span></div>
+        <div class="result-row"><span class="lbl">Labor total</span><span class="val" id="chLabor">$0.00</span></div>
+        <div class="result-row"><span class="lbl">Subtotal (incl. trip fee)</span><span class="val" id="chSubtotal">$0.00</span></div>
+        <div class="result-row"><span class="lbl">Tax</span><span class="val" id="chTax">$0.00</span></div>
+        <div class="result-row big"><span class="lbl">Amount due</span><span class="val" id="chTotal">$0.00</span></div>
+        <p class="fineprint">Your labor rate and hours are your own charges to the client, so they appear on the report — this tool has no hidden margin. Parts, labor, trip fee, and tax are all printed in the charges table.</p>
+      </div>
+    </div>
+
+    <!-- RIGHT column -->
+    <div class="stack">
+      <div class="card">
+        <h2>Visit summary</h2>
+        <div class="result-row"><span class="lbl">Time on site</span><span class="val" id="sumTime">—</span></div>
+        <div class="result-row"><span class="lbl">Work items with a status</span><span class="val" id="sumItemsDoc">0 of 0</span></div>
+        <div class="result-row"><span class="lbl">Work items completed</span><span class="val" id="sumItemsDone">0</span></div>
+        <div class="result-row"><span class="lbl">Issues found</span><span class="val" id="sumIssues">0</span></div>
+        <div class="result-row"><span class="lbl">Photos attached</span><span class="val" id="sumPhotos">0</span></div>
+        <div class="result-row"><span class="lbl">Amount due</span><span class="val" id="sumDue">$0.00</span></div>
+        <div class="result-row"><span class="lbl">Documentation status</span><span class="verdict-big no" id="sumStatus">INCOMPLETE</span></div>
+        <div class="result-row"><span class="lbl">Repair status</span><span class="val" id="sumRepair">—</span></div>
+        <div class="warning" id="statusWarn">
+          <strong>Not complete yet:</strong> documentation is COMPLETE only when there is at least one
+          work item, <em>every</em> work item has a status, and both arrival and departure times are set.
+        </div>
+        <label class="check" style="margin-top:14px;">
+          <input type="checkbox" id="pmModeToggle">
+          <span><strong>Property-manager mode</strong> — documentation also requires at least one photo on every <em>Completed</em> work item, the way property managers expect proof before they approve payment.</span>
+        </label>
+      </div>
+
+      <div>
+        <div id="itemsBox"></div>
+        <div class="card">
+          <h2>Add a work item</h2>
+          <div class="add-row">
+            <input type="text" id="newItemTitle" placeholder="e.g. Kitchen sink — replace leaking P-trap" autocomplete="off">
+          </div>
+          <div style="margin-top:12px;">
+            <button class="btn btn-ghost" id="addItemBtn" type="button" style="width:100%;">Add work item</button>
+          </div>
+          <p class="fineprint">Give every item a status before you finish: Completed, Partially completed, Diagnosed only, or Needs return visit. Photos are optional but strongly recommended — they're the proof.</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Issues found</h2>
+        <div class="field">
+          <label for="issItem">Issue <span class="hint">— what you found</span></label>
+          <input type="text" id="issItem" placeholder="e.g. GFCI outlet, kitchen — faulty" autocomplete="off">
+        </div>
+        <div class="field">
+          <label for="issSeverity">Severity</label>
+          <select id="issSeverity">
+            <option>Low</option>
+            <option>Medium</option>
+            <option>High</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="issRec">Recommendation <span class="hint">— what should be done about it</span></label>
+          <textarea id="issRec" rows="2" placeholder="e.g. Outlet trips under load and fails self-test. Replace on a return visit."></textarea>
+        </div>
+        <label class="check">
+          <input type="checkbox" id="issReturn">
+          <span>Needs a return visit — include it in "Recommended next steps"</span>
+        </label>
+        <button class="btn btn-ghost" id="addIssueBtn" type="button" style="width:100%;">Add issue to the list</button>
+        <div class="saved-list" id="issuesList"></div>
+      </div>
+
+      <div class="card">
+        <h2>Report preview</h2>
+        <div class="preview-wrap" id="previewWrap">
+          <div class="preview-watermark" id="previewWatermark"><span>PREVIEW</span></div>
+          <div id="previewBox"></div>
+        </div>
+        <p class="fineprint">This is a live preview of your report. Free-plan previews carry a watermark; the PDF you download — your first one is free — never does.</p>
+      </div>
+
+      <div class="card">
+        <h2>Finish this visit</h2>
+        <button class="btn btn-primary" id="pdfBtn" type="button">Download PDF visit report</button>
+        <p class="fineprint" id="pdfNote">Pro feature — the branded PDF carries your logo, work items with photos, issues and recommendations, the charges table with the amount due, and a customer acknowledgment block. It's the copy you send the client.</p>
+        <div style="margin-top:14px;">
+          <button class="btn btn-ghost" id="saveVisitBtn" type="button" style="width:100%;">Save visit to history</button>
+          <p class="fineprint">Pro feature — saved visits appear in your history dashboard below, with an evidence pack for each.</p>
+        </div>
+      </div>
+
+      <!-- PRO GATE (shown when Pro is locked) -->
+      <div class="card" id="proGate">
+        <h2>FixVisit Report Pro <span class="pro-tag">PRO</span></h2>
+        <p style="font-size:15px; margin-bottom:6px;">Unlock unlimited branded PDF reports, an evidence pack (report + original photos in one ZIP) for every saved visit, the visit history dashboard with billed totals, and backup export. Your first PDF report is free either way — no credit card required.</p>
+        <p style="font-size:15px; margin-bottom:16px;"><strong>$19/month founding-member pricing</strong> — locked in while your subscription stays active. Standard price $29.</p>
+        <a class="btn btn-primary" id="subscribeBtn" href="https://buy.stripe.com/6oU8wQak38CYgTybS80oM0v" style="margin-bottom:12px;">Subscribe — $19/month</a>
+        <button class="btn btn-ghost" id="unlockBtn" type="button" style="width:100%;">I already subscribed — unlock Pro</button>
+        <p class="fineprint">Launch note: during our opening validation, unlocking is on the honor system — please subscribe first; the button simply turns Pro on for this browser on this device.</p>
+      </div>
+
+      <!-- PRO AREA (shown when Pro is unlocked) -->
+      <div id="proArea" style="display:none;">
+        <div class="stack">
+          <div class="card">
+            <h2>Visit history <span class="pro-tag">PRO</span></h2>
+            <div class="result-row"><span class="lbl">Visits this month</span><span class="val" id="totMonth">0</span></div>
+            <div class="result-row"><span class="lbl">Amount billed this month</span><span class="val" id="totBilledMonth">$0.00</span></div>
+            <div class="result-row"><span class="lbl">Visits all time</span><span class="val" id="totAll">0</span></div>
+            <div class="result-row"><span class="lbl">Amount billed all time</span><span class="val" id="totBilledAll">$0.00</span></div>
+            <div class="result-row"><span class="lbl">Awaiting payment (submitted + approved)</span><span class="val" id="totAwaiting">$0.00</span></div>
+            <p class="fineprint" style="margin-top:10px;">Track each visit's payment below — Unbilled, Submitted, Approved, Paid. Export an evidence pack or backup regularly — your records live only in this browser.</p>
+            <div class="data-row" style="margin-top:0;">
+              <button class="btn btn-ghost btn-small" id="exportCsvBtn" type="button">Export history (CSV)</button>
+            </div>
+            <div class="saved-list" id="historyList"></div>
+          </div>
+
+          <div class="card">
+            <h2>Your data <span class="pro-tag">PRO</span></h2>
+            <div class="data-note"><strong>Your data is stored only in this browser on this device</strong> — visit details and charges in browser storage, photos in this browser's local database (IndexedDB). Export a backup regularly. Clearing browser data erases saved visits and photos.</div>
+            <p class="fineprint" id="storageNote">Photo storage: checking…</p>
+            <div class="data-row">
+              <button class="btn btn-ghost btn-small" id="exportBackupBtn" type="button">Export backup (JSON)</button>
+              <label class="btn btn-ghost btn-small" for="importInput" style="cursor:pointer;">Import backup…</label>
+              <input type="file" id="importInput" accept="application/json,.json" style="display:none;">
+            </div>
+            <div class="data-row">
+              <button class="btn btn-ghost btn-small" id="lockBtn" type="button">Lock Pro on this device</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  var PRO_KEY      = "fixvisit.pro.v1";
+  var FREE_REPORT_KEY = "fixvisit.freereport.v1";
+  var SETTINGS_KEY = "fixvisit.settings.v1";
+  var VISITS_KEY   = "fixvisit.visits.v1";
+  var DRAFT_KEY    = "fixvisit.draft.v1";
+  var PROFILES_KEY = "fixvisit.profiles.v1";
+  var STRIPE_URL   = "https://buy.stripe.com/6oU8wQak38CYgTybS80oM0v";
+  var STATUSES     = ["Completed","Partially completed","Diagnosed only","Needs return visit"];
+  var VISIT_TYPES  = ["Service call","Repair","Maintenance","Inspection","Follow-up"];
+  var SEVERITIES   = ["Low","Medium","High"];
+  var PAY_STATUSES = ["Unbilled","Submitted","Approved","Paid"];
+  var ACK_MODES    = ["onsite","manager","remote"];
+  var TERMS_MODES  = ["due","net15","net30","custom"];
+  // Property-manager mode (persisted in settings as pmMode): when on,
+  // documentation completeness ALSO requires a photo on every Completed
+  // work item. Module-level so the pure status functions can read it;
+  // applySettings() syncs it from saved settings at init and on import.
+  var pmModeOn = false;
+
+  function $(id){ return document.getElementById(id); }
+
+  function uid(){
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 9);
+  }
+  function clone(o){ return JSON.parse(JSON.stringify(o)); }
+  function round2(n){ return Math.round((Number(n) || 0) * 100) / 100; }
+  function money(n){
+    return "$" + (Number(n) || 0).toLocaleString("en-US", {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  }
+  function num(v){ var n = parseFloat(v); return isNaN(n) ? 0 : n; }
+
+  // ---- Pure visit logic (also documented in README.md) ----
+  // A work item is { id, title, description, status, beforeIds:[], afterIds:[] }.
+  // status is "" until the handyman sets one of STATUSES.
+  // An issue is { id, item, severity, recommendation, needsReturn }.
+  // A part is { id, name, qty, unitPrice }.
+
+  // "09:15" -> 555 minutes after midnight; null for anything unparseable.
+  function parseHM(str){
+    if(typeof str !== "string"){ return null; }
+    var m = /^(\d{1,2}):(\d{2})$/.exec(str.trim());
+    if(!m){ return null; }
+    var h = parseInt(m[1], 10), mi = parseInt(m[2], 10);
+    if(h > 23 || mi > 59){ return null; }
+    return h * 60 + mi;
+  }
+
+  // Minutes on site, or null when either time is missing or the two are
+  // equal. A departure earlier than the arrival is read as crossing
+  // midnight (an overnight visit) and gets +24h.
+  function timeOnSiteMinutes(state){
+    var a = parseHM(state.arrival), d = parseHM(state.departure);
+    if(a === null || d === null){ return null; }
+    var mins = d - a;
+    if(mins < 0){ mins += 24 * 60; }
+    return mins > 0 ? mins : null;
+  }
+  function fmtHours(mins){
+    var h = mins / 60;
+    return (Math.round(h * 100) / 100).toString();
+  }
+  // "09:15" -> "9:15 AM"
+  function fmtTime(str){
+    var mins = parseHM(str);
+    if(mins === null){ return ""; }
+    var h = Math.floor(mins / 60), mi = mins % 60;
+    var ap = h >= 12 ? "PM" : "AM";
+    var h12 = h % 12; if(h12 === 0){ h12 = 12; }
+    return h12 + ":" + (mi < 10 ? "0" : "") + mi + " " + ap;
+  }
+  // "2026-11-23" -> "November 23, 2026" (parsed as a local date, never UTC)
+  function fmtDate(str){
+    if(typeof str !== "string"){ return ""; }
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(str.trim());
+    if(!m){ return str; }
+    var d = new Date(parseInt(m[1], 10), parseInt(m[2], 10) - 1, parseInt(m[3], 10));
+    if(isNaN(d.getTime())){ return str; }
+    return d.toLocaleDateString("en-US", {month:"long", day:"numeric", year:"numeric"});
+  }
+
+  // Charges: parts (qty x unit price) + labor (hours x rate) + trip fee,
+  // then optional tax % on that subtotal. Every figure is rounded to cents.
+  // The labor rate and hours are the handyman's own charges to the client —
+  // there is deliberately no hidden margin in this tool.
+  function charges(state){
+    var partsTotal = 0;
+    var lines = (state.parts || []).map(function(p){
+      var line = round2(num(p.qty) * num(p.unitPrice));
+      partsTotal = round2(partsTotal + line);
+      return { name: p.name || "", qty: num(p.qty), unitPrice: num(p.unitPrice), line: line };
+    });
+    var laborTotal = round2(num(state.laborHours) * num(state.laborRate));
+    var trip = round2(num(state.tripFee));
+    var subtotal = round2(partsTotal + laborTotal + trip);
+    var tax = round2(subtotal * num(state.taxPct) / 100);
+    return {
+      lines: lines, partsTotal: partsTotal, laborTotal: laborTotal,
+      tripFee: trip, subtotal: subtotal, tax: tax, total: round2(subtotal + tax)
+    };
+  }
+
+  function itemsDocumented(state){
+    var n = 0;
+    (state.items || []).forEach(function(it){ if(STATUSES.indexOf(it.status) >= 0){ n++; } });
+    return n;
+  }
+  function itemsCompleted(state){
+    var n = 0;
+    (state.items || []).forEach(function(it){ if(it.status === "Completed"){ n++; } });
+    return n;
+  }
+  function countPhotos(state){
+    var n = 0;
+    (state.items || []).forEach(function(it){
+      n += (it.beforeIds || []).length + (it.afterIds || []).length;
+    });
+    return n;
+  }
+  function returnIssueCount(state){
+    var n = 0;
+    (state.issues || []).forEach(function(it){ if(it.needsReturn){ n++; } });
+    return n;
+  }
+
+  // "Recommended next steps": work items whose status is "Needs return
+  // visit", plus issues flagged needsReturn. Each entry is {title, note}.
+  function nextSteps(state){
+    var out = [];
+    (state.items || []).forEach(function(it){
+      if(it.status === "Needs return visit"){
+        out.push({ title: it.title || "Work item", note: it.description || "" });
+      }
+    });
+    (state.issues || []).forEach(function(it){
+      if(it.needsReturn){
+        out.push({ title: it.item || "Issue", note: it.recommendation || "" });
+      }
+    });
+    return out;
+  }
+
+  // Completed work items that have NO photo at all (before or after).
+  // Property-manager mode treats these as undocumented: managers approve
+  // payment from the photos, not from a claim that work was done.
+  function completedItemsMissingPhotos(state){
+    var out = [];
+    (state.items || []).forEach(function(it){
+      if(it.status === "Completed" &&
+         !(it.beforeIds || []).length && !(it.afterIds || []).length){ out.push(it); }
+    });
+    return out;
+  }
+
+  // Documentation COMPLETE only when there is at least one work item,
+  // EVERY work item has a status, and arrival + departure give a real
+  // time on site. With property-manager mode on (second arg, defaulting
+  // to the persisted setting), every Completed item must also carry at
+  // least one photo. This says the PAPERWORK is complete — never that
+  // the repairs are finished (see repairStatus).
+  function computeComplete(state, pm){
+    var items = state.items || [];
+    if(!items.length){ return false; }
+    for(var i = 0; i < items.length; i++){
+      if(STATUSES.indexOf(items[i].status) < 0){ return false; }
+    }
+    if(timeOnSiteMinutes(state) === null){ return false; }
+    var pmOn = (typeof pm === "boolean") ? pm : pmModeOn;
+    if(pmOn && completedItemsMissingPhotos(state).length){ return false; }
+    return true;
+  }
+
+  // Repair status — derived ONLY from work-item statuses, and deliberately
+  // separate from documentation status. A visit where every item needs a
+  // return visit has COMPLETE paperwork but must never read as repairs
+  // finished. Rules, in order:
+  //   no items                       -> "No work items recorded"
+  //   no item has a status yet       -> "Not yet determined"
+  //   every item Completed           -> "All work completed"
+  //   any Needs return visit or
+  //     Partially completed          -> "Return visit required"
+  //   every item Diagnosed only      -> "Diagnosis only — no repairs performed"
+  //   otherwise (Completed mixed
+  //     with Diagnosed only)         -> "Work finished — some items diagnosed only"
+  function repairStatus(state){
+    var items = state.items || [];
+    if(!items.length){ return "No work items recorded"; }
+    var anySet = false, allCompleted = true, allDiagnosed = true, anyReturn = false;
+    items.forEach(function(it){
+      if(STATUSES.indexOf(it.status) < 0){ allCompleted = false; allDiagnosed = false; return; }
+      anySet = true;
+      if(it.status !== "Completed"){ allCompleted = false; }
+      if(it.status !== "Diagnosed only"){ allDiagnosed = false; }
+      if(it.status === "Needs return visit" || it.status === "Partially completed"){ anyReturn = true; }
+    });
+    if(allCompleted){ return "All work completed"; }
+    if(anyReturn){ return "Return visit required"; }
+    if(allDiagnosed){ return "Diagnosis only — no repairs performed"; }
+    if(!anySet){ return "Not yet determined"; }
+    return "Work finished — some items diagnosed only";
+  }
+
+  // The reference numbers property managers file paperwork by, as one
+  // line: "Work order #: WO-2481  ·  Unit: 4B  ·  PO #: …  ·  Invoice #: …"
+  // Empty when the visit carries no references.
+  function refsLine(rec){
+    var parts = [];
+    if(rec.workOrder){ parts.push("Work order #: " + rec.workOrder); }
+    if(rec.unit){ parts.push("Unit: " + rec.unit); }
+    if(rec.poNumber){ parts.push("PO #: " + rec.poNumber); }
+    if(rec.invoiceRef){ parts.push("Invoice #: " + rec.invoiceRef); }
+    return parts.join("  ·  ");
+  }
+  function reportId(rec){ return rec.id || ""; }
+
+  // Payment terms: a mode (due / net15 / net30 / custom) resolved to the
+  // exact text printed next to the amount due.
+  function resolvedTerms(mode, custom){
+    if(mode === "net15"){ return "Net 15"; }
+    if(mode === "net30"){ return "Net 30"; }
+    if(mode === "custom"){
+      var t = String(custom || "").trim();
+      return t || "Due on receipt";
+    }
+    return "Due on receipt";
+  }
+  // Older records stored only the printed text — infer the mode back.
+  function inferTermsMode(text){
+    if(text === "Net 15"){ return "net15"; }
+    if(text === "Net 30"){ return "net30"; }
+    if(text && text !== "Due on receipt"){ return "custom"; }
+    return "due";
+  }
+
+  function historyTotals(visits, now){
+    now = now || new Date();
+    var m = now.getMonth(), y = now.getFullYear();
+    var month = 0, billedMonth = 0, billedAll = 0, awaiting = 0;
+    (visits || []).forEach(function(v){
+      var amt = num(v.amountDue);
+      billedAll = round2(billedAll + amt);
+      // Awaiting payment = sent to the client and approved-or-earlier,
+      // but not yet Paid: Submitted + Approved, across all time.
+      if(v.payStatus === "Submitted" || v.payStatus === "Approved"){
+        awaiting = round2(awaiting + amt);
+      }
+      var dm = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(v.date || ""));
+      if(dm && parseInt(dm[1], 10) === y && parseInt(dm[2], 10) === m + 1){
+        month++; billedMonth = round2(billedMonth + amt);
+      }
+    });
+    return { total: (visits || []).length, thisMonth: month,
+             billedThisMonth: billedMonth, billedAllTime: billedAll,
+             awaitingPayment: awaiting };
+  }
+
+  function normalizeState(s){
+    s = (s && typeof s === "object") ? s : {};
+    var termsMode = TERMS_MODES.indexOf(s.paymentTermsMode) >= 0
+      ? s.paymentTermsMode
+      : inferTermsMode(typeof s.paymentTerms === "string" ? s.paymentTerms : "");
+    var termsCustom = (typeof s.paymentTermsCustom === "string")
+      ? s.paymentTermsCustom
+      : (termsMode === "custom" && typeof s.paymentTerms === "string" ? s.paymentTerms : "");
+    var out = {
+      client: s.client || "", address: s.address || "",
+      workOrder: s.workOrder || "", unit: s.unit || "",
+      poNumber: s.poNumber || "", invoiceRef: s.invoiceRef || "",
+      date: s.date || "", arrival: s.arrival || "", departure: s.departure || "",
+      visitType: VISIT_TYPES.indexOf(s.visitType) >= 0 ? s.visitType : "Repair",
+      paymentTermsMode: termsMode,
+      paymentTermsCustom: termsCustom,
+      paymentTerms: resolvedTerms(termsMode, termsCustom),
+      ackMode: ACK_MODES.indexOf(s.ackMode) >= 0 ? s.ackMode : "onsite",
+      payStatus: PAY_STATUSES.indexOf(s.payStatus) >= 0 ? s.payStatus : "Unbilled",
+      items: [], issues: [], parts: [],
+      laborHours: num(s.laborHours), laborRate: num(s.laborRate),
+      tripFee: num(s.tripFee), taxPct: num(s.taxPct)
+    };
+    (Array.isArray(s.items) ? s.items : []).forEach(function(it){
+      out.items.push({
+        id: it.id || uid(),
+        title: it.title || "", description: it.description || "",
+        status: STATUSES.indexOf(it.status) >= 0 ? it.status : "",
+        beforeIds: Array.isArray(it.beforeIds) ? it.beforeIds.slice() : [],
+        afterIds: Array.isArray(it.afterIds) ? it.afterIds.slice() : []
+      });
+    });
+    (Array.isArray(s.issues) ? s.issues : []).forEach(function(it){
+      out.issues.push({
+        id: it.id || uid(), item: it.item || "",
+        severity: SEVERITIES.indexOf(it.severity) >= 0 ? it.severity : "Low",
+        recommendation: it.recommendation || "", needsReturn: !!it.needsReturn
+      });
+    });
+    (Array.isArray(s.parts) ? s.parts : []).forEach(function(p){
+      out.parts.push({ id: p.id || uid(), name: p.name || "", qty: num(p.qty), unitPrice: num(p.unitPrice) });
+    });
+    return out;
+  }
+
+  function makeRecord(state){
+    var s = normalizeState(clone(state));
+    var ch = charges(s);
+    var rec = clone(s);
+    rec.id = uid();
+    rec.amountDue = ch.total;
+    rec.complete = computeComplete(s);
+    rec.repairStatus = repairStatus(s);
+    rec.evidenceExported = false;
+    rec.createdAt = new Date().toISOString();
+    return rec;
+  }
+
+  // "Start similar visit": a fresh builder state carrying only what a
+  // repeat visit to the same property needs — client, property, the
+  // reference numbers, and the work items' titles/descriptions. Photos,
+  // dates, times, statuses, issues, and ALL charges stay behind: they
+  // describe the old visit, not the new one.
+  function similarVisitState(rec){
+    var s = freshState();
+    s.client = rec.client || "";
+    s.address = rec.address || "";
+    s.workOrder = rec.workOrder || "";
+    s.unit = rec.unit || "";
+    s.poNumber = rec.poNumber || "";
+    s.invoiceRef = rec.invoiceRef || "";
+    s.items = (rec.items || []).map(function(it){
+      return { id: uid(), title: it.title || "", description: it.description || "",
+               status: "", beforeIds: [], afterIds: [] };
+    });
+    return s;
+  }
+
+  // ---- PhotoStore: IndexedDB wrapper (photos are too big for localStorage).
+  // Falls back to an in-memory store only when IndexedDB is unavailable, so
+  // the app never hard-crashes; the UI storage note says which is in use.
+  var PhotoStore = (function(){
+    var mem = {};
+    var useMem = (typeof indexedDB === "undefined");
+    var dbPromise = null;
+    function open(){
+      if(useMem){ return Promise.resolve(null); }
+      if(!dbPromise){
+        dbPromise = new Promise(function(resolve, reject){
+          var req;
+          try { req = indexedDB.open("fixvisit", 1); }
+          catch(e){ useMem = true; resolve(null); return; }
+          req.onupgradeneeded = function(ev){
+            var db = ev.target.result;
+            if(!db.objectStoreNames.contains("photos")){ db.createObjectStore("photos"); }
+          };
+          req.onsuccess = function(ev){ resolve(ev.target.result); };
+          req.onerror = function(){ useMem = true; resolve(null); };
+        });
+      }
+      return dbPromise;
+    }
+    function run(makeReq){
+      return open().then(function(db){
+        if(!db || useMem){ return null; }
+        return new Promise(function(resolve, reject){
+          var rq = makeReq(db);
+          rq.onsuccess = function(){ resolve(rq.result); };
+          rq.onerror = function(){ reject(rq.error); };
+        });
+      });
+    }
+    return {
+      isMemoryFallback: function(){ return useMem; },
+      put: function(id, dataUrl){
+        if(useMem){ mem[id] = dataUrl; return Promise.resolve(); }
+        return run(function(db){
+          return db.transaction("photos", "readwrite").objectStore("photos").put(dataUrl, id);
+        }).then(function(){ return undefined; })
+          .catch(function(){ mem[id] = dataUrl; });
+      },
+      get: function(id){
+        if(useMem){ return Promise.resolve(mem[id] || null); }
+        return run(function(db){
+          return db.transaction("photos", "readonly").objectStore("photos").get(id);
+        }).then(function(v){ return (v === undefined || v === null) ? (mem[id] || null) : v; })
+          .catch(function(){ return mem[id] || null; });
+      },
+      del: function(id){
+        delete mem[id];
+        if(useMem){ return Promise.resolve(); }
+        return run(function(db){
+          return db.transaction("photos", "readwrite").objectStore("photos").delete(id);
+        }).then(function(){ return undefined; }).catch(function(){ return undefined; });
+      },
+      keys: function(){
+        if(useMem){ return Promise.resolve(Object.keys(mem)); }
+        return run(function(db){
+          return db.transaction("photos", "readonly").objectStore("photos").getAllKeys();
+        }).then(function(k){ return k || []; }).catch(function(){ return Object.keys(mem); });
+      }
+    };
+  })();
+
+  // Downscale a photo data URL to max 1280px JPEG where canvas is available;
+  // any failure returns the original data URL untouched.
+  function downscalePhoto(dataUrl){
+    return new Promise(function(resolve){
+      if(typeof Image === "undefined"){ resolve(dataUrl); return; }
+      var img = new Image();
+      img.onload = function(){
+        try {
+          var maxDim = 1280;
+          var w = img.naturalWidth || img.width, h = img.naturalHeight || img.height;
+          if(!w || !h || (w <= maxDim && h <= maxDim)){ resolve(dataUrl); return; }
+          var scale = Math.min(maxDim / w, maxDim / h);
+          var canvas = document.createElement("canvas");
+          canvas.width = Math.round(w * scale);
+          canvas.height = Math.round(h * scale);
+          var ctx = canvas.getContext && canvas.getContext("2d");
+          if(!ctx || !canvas.toDataURL){ resolve(dataUrl); return; }
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          resolve(canvas.toDataURL("image/jpeg", 0.82));
+        } catch(e){ resolve(dataUrl); }
+      };
+      img.onerror = function(){ resolve(dataUrl); };
+      img.src = dataUrl;
+    });
+  }
+
+  function readFileAsDataUrl(file){
+    return new Promise(function(resolve, reject){
+      var reader = new FileReader();
+      reader.onload = function(){ resolve(String(reader.result || "")); };
+      reader.onerror = function(){ reject(new Error("read failed")); };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // ---- localStorage helpers ----
+  function lsGet(key, fallback){
+    try {
+      var raw = localStorage.getItem(key);
+      if(raw === null || raw === undefined){ return fallback; }
+      var v = JSON.parse(raw);
+      return (v === null || v === undefined) ? fallback : v;
+    } catch(e){ return fallback; }
+  }
+  function lsSet(key, value){
+    try { localStorage.setItem(key, JSON.stringify(value)); return true; }
+    catch(e){ return false; }
+  }
+
+  function loadSettings(){ var s = lsGet(SETTINGS_KEY, {}); return (s && typeof s === "object") ? s : {}; }
+  function loadVisits(){ var a = lsGet(VISITS_KEY, []); return Array.isArray(a) ? a : []; }
+  function storeVisits(a){
+    if(!lsSet(VISITS_KEY, a)){ alert("Could not save — this browser's storage is unavailable or full."); }
+  }
+
+  // ---- Settings: company fields + logo (persisted) ----
+  var logoDataUrl = "";
+  var logoImg = (typeof Image !== "undefined") ? new Image() : null;
+
+  function saveSettings(){
+    var s = loadSettings();
+    s.companyName  = $("companyName").value;
+    s.companyPhone = $("companyPhone").value;
+    s.companyEmail = $("companyEmail").value;
+    s.logo = logoDataUrl || "";
+    lsSet(SETTINGS_KEY, s);
+  }
+  function setLogo(dataUrl, silent){
+    logoDataUrl = dataUrl || "";
+    if(logoImg && logoDataUrl){ logoImg.src = logoDataUrl; }
+    $("logoStatus").textContent = logoDataUrl ? "Logo uploaded — it will appear on your PDF reports." : "No logo uploaded.";
+    $("removeLogoBtn").style.display = logoDataUrl ? "inline-block" : "none";
+    if(!silent){ saveSettings(); }
+  }
+  function applySettings(){
+    var s = loadSettings();
+    if(s.companyName){ $("companyName").value = s.companyName; }
+    if(s.companyPhone){ $("companyPhone").value = s.companyPhone; }
+    if(s.companyEmail){ $("companyEmail").value = s.companyEmail; }
+    if(s.logo){ setLogo(s.logo, true); }
+    pmModeOn = !!s.pmMode;
+    var tg = $("pmModeToggle");
+    if(tg){ tg.checked = pmModeOn; }
+  }
+  $("logoInput").addEventListener("change", function(){
+    var f = $("logoInput").files && $("logoInput").files[0];
+    if(!f){ return; }
+    readFileAsDataUrl(f).then(function(url){ setLogo(url); })
+      .catch(function(){ alert("That logo file couldn't be read. Try a PNG or JPG."); });
+  });
+  $("removeLogoBtn").addEventListener("click", function(){
+    $("logoInput").value = "";
+    setLogo("");
+  });
+  ["companyName","companyPhone","companyEmail"].forEach(function(id){
+    $(id).addEventListener("input", saveSettings);
+  });
+
+  // ---- Pro state ----
+  function isPro(){
+    try { return localStorage.getItem(PRO_KEY) === "1"; } catch(e){ return false; }
+  }
+  function proAlert(what){
+    alert(what + " is a Pro feature. Subscribe ($19/month founding price) or tap \u201CI already subscribed \u2014 unlock Pro\u201D below.");
+  }
+
+  // ---- First report free: one complete branded PDF for free-tier users,
+  // tracked by a localStorage counter. Best-effort only (clearing browser
+  // data resets it) — there is no registration or server check at MVP.
+  function freeReportsUsed(){
+    try { return parseInt(localStorage.getItem(FREE_REPORT_KEY) || "0", 10) || 0; }
+    catch(e){ return 0; }
+  }
+  function freeReportAvailable(){ return freeReportsUsed() < 1; }
+  function consumeFreeReport(){
+    try { localStorage.setItem(FREE_REPORT_KEY, String(freeReportsUsed() + 1)); } catch(e){ /* ignore */ }
+  }
+
+  // ---- Working state ----
+  function todayValue(){
+    var d = new Date();
+    function p(n){ return (n < 10 ? "0" : "") + n; }
+    return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate());
+  }
+
+  var state = null; // the in-progress visit
+
+  function freshState(){
+    return normalizeState({ date: todayValue(), visitType: "Repair", paymentTerms: "Due on receipt" });
+  }
+
+  function syncStateFromFields(){
+    if(!state){ return; }
+    state.client = $("clientName").value.trim();
+    state.address = $("propertyAddress").value.trim();
+    state.workOrder = $("workOrder").value.trim();
+    state.unit = $("unit").value.trim();
+    state.poNumber = $("poNumber").value.trim();
+    state.invoiceRef = $("invoiceRef").value.trim();
+    state.date = $("visitDate").value || state.date;
+    state.visitType = $("visitType").value || "Repair";
+    state.arrival = $("arrivalTime").value || "";
+    state.departure = $("departureTime").value || "";
+    state.paymentTermsMode = TERMS_MODES.indexOf($("paymentTermsMode").value) >= 0
+      ? $("paymentTermsMode").value : "due";
+    state.paymentTermsCustom = $("paymentTermsCustom").value;
+    state.paymentTerms = resolvedTerms(state.paymentTermsMode, state.paymentTermsCustom);
+    state.ackMode = ACK_MODES.indexOf($("ackMode").value) >= 0 ? $("ackMode").value : "onsite";
+    state.laborHours = num($("laborHours").value);
+    state.laborRate = num($("laborRate").value);
+    state.tripFee = num($("tripFee").value);
+    state.taxPct = num($("taxPct").value);
+  }
+
+  function syncTermsCustomWrap(){
+    $("paymentTermsCustomWrap").style.display =
+      $("paymentTermsMode").value === "custom" ? "block" : "none";
+  }
+
+  function saveDraft(){
+    if(!state){ return; }
+    syncStateFromFields();
+    lsSet(DRAFT_KEY, { state: state });
+  }
+
+  function loadDraft(){
+    var d = lsGet(DRAFT_KEY, null);
+    if(d && d.state && typeof d.state === "object"){
+      state = normalizeState(d.state);
+      return true;
+    }
+    return false;
+  }
+
+  function syncHeaderFields(){
+    $("clientName").value = state.client || "";
+    $("propertyAddress").value = state.address || "";
+    $("workOrder").value = state.workOrder || "";
+    $("unit").value = state.unit || "";
+    $("poNumber").value = state.poNumber || "";
+    $("invoiceRef").value = state.invoiceRef || "";
+    $("visitDate").value = state.date || "";
+    $("visitType").value = state.visitType || "Repair";
+    $("arrivalTime").value = state.arrival || "";
+    $("departureTime").value = state.departure || "";
+    $("paymentTermsMode").value = state.paymentTermsMode || "due";
+    $("paymentTermsCustom").value = state.paymentTermsCustom || "";
+    syncTermsCustomWrap();
+    $("ackMode").value = state.ackMode || "onsite";
+    $("laborHours").value = state.laborHours || 0;
+    $("laborRate").value = state.laborRate || 0;
+    $("tripFee").value = state.tripFee || 0;
+    $("taxPct").value = state.taxPct || 0;
+  }
+
+  ["clientName","propertyAddress","workOrder","unit","poNumber","invoiceRef",
+   "visitDate","visitType","arrivalTime","departureTime",
+   "paymentTermsMode","paymentTermsCustom","ackMode",
+   "laborHours","laborRate","tripFee","taxPct"].forEach(function(id){
+    $(id).addEventListener("input", function(){ saveDraft(); updateSummary(); });
+    $(id).addEventListener("change", function(){ saveDraft(); updateSummary(); });
+  });
+  $("paymentTermsMode").addEventListener("change", syncTermsCustomWrap);
+
+  $("pmModeToggle").addEventListener("change", function(){
+    pmModeOn = !!$("pmModeToggle").checked;
+    var s = loadSettings();
+    s.pmMode = pmModeOn;
+    lsSet(SETTINGS_KEY, s);
+    updateSummary();
+  });
+
+  $("newVisitBtn").addEventListener("click", function(){
+    state = freshState();
+    syncHeaderFields();
+    renderAll();
+    saveDraft();
+  });
+
+  // ---- Client & property profiles ----
+  // A profile is { id, client, address, unit } — the repeat customers a
+  // maintenance contractor visits every week. Saved once, picked from the
+  // dropdown to autofill a new visit, editable by re-saving over the
+  // selected profile, and carried in backup export/import.
+  function loadProfiles(){
+    var a = lsGet(PROFILES_KEY, []);
+    if(!Array.isArray(a)){ return []; }
+    return a.filter(function(p){ return p && typeof p === "object"; }).map(function(p){
+      return { id: p.id || uid(), client: p.client || "", address: p.address || "", unit: p.unit || "" };
+    });
+  }
+  function storeProfiles(a){ lsSet(PROFILES_KEY, a); }
+
+  function renderProfiles(){
+    var sel = $("profilePicker");
+    var keep = sel.value;
+    sel.innerHTML = "";
+    var none = document.createElement("option");
+    none.value = ""; none.textContent = "— Choose a saved client / property —";
+    sel.appendChild(none);
+    loadProfiles().forEach(function(p){
+      var o = document.createElement("option");
+      o.value = p.id;
+      o.textContent = (p.client || "Unnamed client") +
+        (p.address ? " — " + p.address : "") + (p.unit ? ", Unit " + p.unit : "");
+      sel.appendChild(o);
+    });
+    // Restore the selection if the profile still exists.
+    var exists = false;
+    loadProfiles().forEach(function(p){ if(p.id === keep){ exists = true; } });
+    sel.value = exists ? keep : "";
+  }
+
+  $("profilePicker").addEventListener("change", function(){
+    var id = $("profilePicker").value;
+    if(!id){ return; }
+    var prof = null;
+    loadProfiles().forEach(function(p){ if(p.id === id){ prof = p; } });
+    if(!prof){ return; }
+    state.client = prof.client;
+    state.address = prof.address;
+    state.unit = prof.unit;
+    syncHeaderFields();
+    updateSummary();
+    saveDraft();
+  });
+
+  $("saveProfileBtn").addEventListener("click", function(){
+    syncStateFromFields();
+    if(!state.client && !state.address){
+      alert("Enter a client name or property address first, then save it as a profile.");
+      return;
+    }
+    var profiles = loadProfiles();
+    var selectedId = $("profilePicker").value;
+    var target = null;
+    profiles.forEach(function(p){ if(p.id === selectedId){ target = p; } });
+    if(!target){
+      // No selection: update an exact client+address+unit match instead
+      // of piling up duplicates of the same property.
+      profiles.forEach(function(p){
+        if(p.client === state.client && p.address === state.address && p.unit === state.unit){ target = p; }
+      });
+    }
+    if(target){
+      target.client = state.client; target.address = state.address; target.unit = state.unit;
+    } else {
+      target = { id: uid(), client: state.client, address: state.address, unit: state.unit };
+      profiles.push(target);
+    }
+    storeProfiles(profiles);
+    renderProfiles();
+    $("profilePicker").value = target.id;
+    alert("Profile saved: " + (target.client || "Unnamed client") +
+          (target.address ? " — " + target.address : "") + (target.unit ? ", Unit " + target.unit : "") + ".");
+  });
+
+  $("deleteProfileBtn").addEventListener("click", function(){
+    var id = $("profilePicker").value;
+    if(!id){ alert("Choose a profile in the dropdown first, then delete it."); return; }
+    storeProfiles(loadProfiles().filter(function(p){ return p.id !== id; }));
+    renderProfiles();
+  });
+
+  // ---- Work items ----
+  function findItem(id){
+    var found = null;
+    (state.items || []).forEach(function(it){ if(it.id === id){ found = it; } });
+    return found;
+  }
+
+  function renderItems(){
+    var box = $("itemsBox");
+    box.innerHTML = "";
+    if(!state.items.length){
+      var p = document.createElement("p");
+      p.className = "empty-note";
+      p.style.marginBottom = "16px";
+      p.textContent = "No work items yet — add the first one below.";
+      box.appendChild(p);
+      return;
+    }
+    state.items.forEach(function(item, ii){
+      var card = document.createElement("div");
+      card.className = "room";
+
+      var head = document.createElement("div");
+      head.className = "room-head";
+      var h3 = document.createElement("h3");
+      h3.textContent = "Work item " + (ii + 1);
+      head.appendChild(h3);
+      var del = document.createElement("button");
+      del.type = "button"; del.className = "x-btn item-del";
+      del.setAttribute("data-item", item.id); del.textContent = "✕";
+      del.title = "Remove work item";
+      head.appendChild(del);
+      card.appendChild(head);
+
+      var f1 = document.createElement("div");
+      f1.className = "field";
+      var l1 = document.createElement("label");
+      l1.textContent = "Title — what was worked on";
+      f1.appendChild(l1);
+      var title = document.createElement("input");
+      title.type = "text"; title.className = "item-title";
+      title.setAttribute("data-item", item.id);
+      title.placeholder = "e.g. Kitchen sink — replace leaking P-trap";
+      title.value = item.title || "";
+      f1.appendChild(title);
+      card.appendChild(f1);
+
+      var f2 = document.createElement("div");
+      f2.className = "field";
+      var l2 = document.createElement("label");
+      l2.textContent = "Description — what you found and what you did";
+      f2.appendChild(l2);
+      var desc = document.createElement("textarea");
+      desc.className = "item-desc"; desc.rows = 2;
+      desc.setAttribute("data-item", item.id);
+      desc.placeholder = "e.g. P-trap cracked at the slip nut. Replaced with a new trap kit and tested for drips.";
+      desc.value = item.description || "";
+      f2.appendChild(desc);
+      card.appendChild(f2);
+
+      var f3 = document.createElement("div");
+      f3.className = "field";
+      var l3 = document.createElement("label");
+      l3.textContent = "Status";
+      f3.appendChild(l3);
+      var sel = document.createElement("select");
+      sel.className = "item-status";
+      sel.setAttribute("data-item", item.id);
+      var none = document.createElement("option");
+      none.value = ""; none.textContent = "— Set status —";
+      sel.appendChild(none);
+      STATUSES.forEach(function(st){
+        var o = document.createElement("option");
+        o.value = st; o.textContent = st;
+        sel.appendChild(o);
+      });
+      sel.value = item.status || "";
+      f3.appendChild(sel);
+      card.appendChild(f3);
+
+      [["before","Before photos"],["after","After photos"]].forEach(function(pair){
+        var lab = document.createElement("div");
+        lab.className = "photos-label";
+        lab.textContent = pair[1];
+        card.appendChild(lab);
+        var holder = document.createElement("div");
+        holder.className = "photos";
+        holder.id = "photos-" + pair[0] + "-" + item.id;
+        card.appendChild(holder);
+        var addLab = document.createElement("label");
+        addLab.className = "photo-add";
+        addLab.textContent = "+ Add " + pair[0] + " photo";
+        var file = document.createElement("input");
+        file.type = "file"; file.className = "item-photo-input";
+        file.setAttribute("data-item", item.id);
+        file.setAttribute("data-kind", pair[0]);
+        file.setAttribute("accept", "image/*");
+        file.style.display = "none";
+        addLab.appendChild(file);
+        card.appendChild(addLab);
+      });
+
+      box.appendChild(card);
+    });
+    // Thumbs are filled only after every card is attached to the document,
+    // because fillItemThumbs looks the holders up by id.
+    state.items.forEach(function(item){
+      fillItemThumbs(item.id, "before");
+      fillItemThumbs(item.id, "after");
+    });
+  }
+
+  function fillItemThumbs(itemId, kind){
+    var holder = $("photos-" + kind + "-" + itemId);
+    if(!holder){ return; }
+    var item = findItem(itemId);
+    if(!item){ return; }
+    holder.innerHTML = "";
+    var ids = kind === "before" ? (item.beforeIds || []) : (item.afterIds || []);
+    ids.forEach(function(pid){
+      var th = document.createElement("div");
+      th.className = "thumb";
+      var img = document.createElement("img");
+      img.alt = (kind === "before" ? "Before" : "After") + " photo";
+      th.appendChild(img);
+      var del = document.createElement("button");
+      del.type = "button"; del.className = "thumb-del";
+      del.setAttribute("data-item", itemId); del.setAttribute("data-kind", kind);
+      del.setAttribute("data-photo", pid);
+      del.textContent = "✕"; del.title = "Remove photo";
+      th.appendChild(del);
+      holder.appendChild(th);
+      PhotoStore.get(pid).then(function(url){ if(url){ img.src = url; } });
+    });
+  }
+
+  $("addItemBtn").addEventListener("click", function(){
+    var title = $("newItemTitle").value.trim();
+    state.items.push({
+      id: uid(), title: title, description: "", status: "", beforeIds: [], afterIds: []
+    });
+    $("newItemTitle").value = "";
+    renderItems();
+    updateSummary();
+    saveDraft();
+  });
+
+  $("itemsBox").addEventListener("input", function(ev){
+    var t = ev.target;
+    if(!t || !t.getAttribute){ return; }
+    var item = findItem(t.getAttribute("data-item"));
+    if(!item){ return; }
+    if(t.className === "item-title"){ item.title = t.value; }
+    else if(t.className === "item-desc"){ item.description = t.value; }
+    else { return; }
+    updateSummary();
+    saveDraft();
+  });
+  $("itemsBox").addEventListener("change", function(ev){
+    var t = ev.target;
+    if(!t || !t.getAttribute){ return; }
+    var item = findItem(t.getAttribute("data-item"));
+    if(!item){ return; }
+    if(t.className === "item-status"){
+      item.status = STATUSES.indexOf(t.value) >= 0 ? t.value : "";
+      updateSummary();
+      saveDraft();
+    } else if(t.className === "item-photo-input"){
+      var kind = t.getAttribute("data-kind") === "after" ? "after" : "before";
+      var f = t.files && t.files[0];
+      t.value = "";
+      if(!f){ return; }
+      readFileAsDataUrl(f)
+        .then(function(url){ return downscalePhoto(url); })
+        .then(function(url){
+          var pid = uid();
+          return PhotoStore.put(pid, url).then(function(){
+            if(kind === "before"){ item.beforeIds.push(pid); } else { item.afterIds.push(pid); }
+            fillItemThumbs(item.id, kind);
+            updateSummary();
+            updateStorageNote();
+            saveDraft();
+          });
+        })
+        .catch(function(){ alert("That photo couldn't be read. Try another one."); });
+    }
+  });
+  $("itemsBox").addEventListener("click", function(ev){
+    var t = ev.target;
+    if(!t || !t.getAttribute || !t.className){ return; }
+    if(t.className.indexOf("item-del") >= 0){
+      var item = findItem(t.getAttribute("data-item"));
+      if(item){
+        (item.beforeIds || []).concat(item.afterIds || []).forEach(function(pid){ PhotoStore.del(pid); });
+        state.items = state.items.filter(function(x){ return x.id !== item.id; });
+        renderItems();
+        updateSummary();
+        updateStorageNote();
+        saveDraft();
+      }
+      return;
+    }
+    if(t.className !== "thumb-del"){ return; }
+    var it2 = findItem(t.getAttribute("data-item"));
+    if(!it2){ return; }
+    var kind = t.getAttribute("data-kind") === "after" ? "after" : "before";
+    var pid = t.getAttribute("data-photo");
+    if(kind === "before"){ it2.beforeIds = it2.beforeIds.filter(function(x){ return x !== pid; }); }
+    else { it2.afterIds = it2.afterIds.filter(function(x){ return x !== pid; }); }
+    PhotoStore.del(pid);
+    fillItemThumbs(it2.id, kind);
+    updateSummary();
+    updateStorageNote();
+    saveDraft();
+  });
+
+  // ---- Issues ----
+  function renderIssues(){
+    var box = $("issuesList");
+    box.innerHTML = "";
+    if(!state.issues.length){
+      var p = document.createElement("p");
+      p.className = "empty-note";
+      p.textContent = "No issues logged for this visit.";
+      box.appendChild(p);
+      return;
+    }
+    state.issues.forEach(function(it){
+      var row = document.createElement("div");
+      row.className = "issue-item";
+      var chip = document.createElement("span");
+      chip.className = "chip chip-sev-" + (it.severity || "Low");
+      chip.textContent = it.severity || "Low";
+      row.appendChild(chip);
+      var txt = document.createElement("div");
+      txt.className = "txt";
+      var main = document.createElement("div");
+      main.textContent = (it.item || "Issue") + (it.needsReturn ? " — needs a return visit" : "");
+      txt.appendChild(main);
+      if(it.recommendation){
+        var where = document.createElement("div");
+        where.className = "where";
+        where.textContent = it.recommendation;
+        txt.appendChild(where);
+      }
+      row.appendChild(txt);
+      var del = document.createElement("button");
+      del.type = "button"; del.className = "btn btn-ghost btn-small issue-del";
+      del.setAttribute("data-issue", it.id);
+      del.textContent = "Delete";
+      row.appendChild(del);
+      box.appendChild(row);
+    });
+  }
+
+  $("issuesList").addEventListener("click", function(ev){
+    var t = ev.target;
+    if(!t || !t.getAttribute || t.className.indexOf("issue-del") < 0){ return; }
+    var id = t.getAttribute("data-issue");
+    state.issues = state.issues.filter(function(it){ return it.id !== id; });
+    renderIssues();
+    updateSummary();
+    saveDraft();
+  });
+
+  $("addIssueBtn").addEventListener("click", function(){
+    var item = $("issItem").value.trim();
+    if(!item){ alert("Name the issue first — e.g. \u201CGFCI outlet, kitchen — faulty\u201D."); return; }
+    state.issues.push({
+      id: uid(),
+      item: item,
+      severity: SEVERITIES.indexOf($("issSeverity").value) >= 0 ? $("issSeverity").value : "Low",
+      recommendation: $("issRec").value.trim(),
+      needsReturn: !!$("issReturn").checked
+    });
+    $("issItem").value = "";
+    $("issRec").value = "";
+    $("issReturn").checked = false;
+    renderIssues();
+    updateSummary();
+    saveDraft();
+  });
+
+  // ---- Parts ----
+  function renderParts(){
+    var box = $("partsBox");
+    box.innerHTML = "";
+    if(!state.parts.length){
+      var p = document.createElement("p");
+      p.className = "empty-note";
+      p.style.marginBottom = "10px";
+      p.textContent = "No parts yet — add the first one.";
+      box.appendChild(p);
+    }
+    state.parts.forEach(function(part){
+      var row = document.createElement("div");
+      row.className = "part-row";
+      var nm = document.createElement("input");
+      nm.type = "text"; nm.className = "part-name";
+      nm.setAttribute("data-part", part.id);
+      nm.placeholder = "e.g. P-trap kit"; nm.value = part.name || "";
+      row.appendChild(nm);
+      var qty = document.createElement("input");
+      qty.type = "number"; qty.className = "part-qty"; qty.min = "0"; qty.step = "1";
+      qty.setAttribute("data-part", part.id);
+      qty.value = part.qty || 0;
+      row.appendChild(qty);
+      var price = document.createElement("input");
+      price.type = "number"; price.className = "part-price"; price.min = "0"; price.step = "0.01";
+      price.setAttribute("data-part", part.id);
+      price.value = part.unitPrice || 0;
+      row.appendChild(price);
+      var line = document.createElement("span");
+      line.className = "part-line"; line.id = "partLine-" + part.id;
+      line.textContent = money(num(part.qty) * num(part.unitPrice));
+      row.appendChild(line);
+      var del = document.createElement("button");
+      del.type = "button"; del.className = "x-btn part-del";
+      del.setAttribute("data-part", part.id); del.textContent = "✕";
+      del.title = "Remove part";
+      row.appendChild(del);
+      box.appendChild(row);
+    });
+  }
+
+  function findPart(id){
+    var found = null;
+    (state.parts || []).forEach(function(p){ if(p.id === id){ found = p; } });
+    return found;
+  }
+
+  $("addPartBtn").addEventListener("click", function(){
+    state.parts.push({ id: uid(), name: "", qty: 1, unitPrice: 0 });
+    renderParts();
+    updateSummary();
+    saveDraft();
+  });
+  $("partsBox").addEventListener("input", function(ev){
+    var t = ev.target;
+    if(!t || !t.getAttribute){ return; }
+    var part = findPart(t.getAttribute("data-part"));
+    if(!part){ return; }
+    if(t.className === "part-name"){ part.name = t.value; }
+    else if(t.className === "part-qty"){ part.qty = num(t.value); }
+    else if(t.className === "part-price"){ part.unitPrice = num(t.value); }
+    else { return; }
+    var line = $("partLine-" + part.id);
+    if(line){ line.textContent = money(num(part.qty) * num(part.unitPrice)); }
+    updateSummary();
+    saveDraft();
+  });
+  $("partsBox").addEventListener("click", function(ev){
+    var t = ev.target;
+    if(!t || !t.getAttribute || t.className.indexOf("part-del") < 0){ return; }
+    var id = t.getAttribute("data-part");
+    state.parts = state.parts.filter(function(p){ return p.id !== id; });
+    renderParts();
+    updateSummary();
+    saveDraft();
+  });
+
+  // ---- Summary + preview ----
+  function updateSummary(){
+    if(!state){ return; }
+    syncStateFromFields();
+    var mins = timeOnSiteMinutes(state);
+    $("sumTime").textContent = mins === null ? "— set arrival & departure" : fmtHours(mins) + " hrs (" + fmtTime(state.arrival) + " – " + fmtTime(state.departure) + ")";
+    $("sumItemsDoc").textContent = itemsDocumented(state) + " of " + state.items.length;
+    $("sumItemsDone").textContent = itemsCompleted(state);
+    var ri = returnIssueCount(state);
+    $("sumIssues").textContent = state.issues.length + (ri ? " (" + ri + (ri === 1 ? " needs" : " need") + " a return visit)" : "");
+    $("sumPhotos").textContent = countPhotos(state);
+    var ch = charges(state);
+    $("chParts").textContent = money(ch.partsTotal);
+    $("chLabor").textContent = money(ch.laborTotal);
+    $("chSubtotal").textContent = money(ch.subtotal);
+    $("chTax").textContent = money(ch.tax);
+    $("chTotal").textContent = money(ch.total);
+    $("sumDue").textContent = money(ch.total);
+    var complete = computeComplete(state);
+    var el = $("sumStatus");
+    el.textContent = complete ? "COMPLETE" : "INCOMPLETE";
+    el.className = "verdict-big " + (complete ? "yes" : "no");
+    $("sumRepair").textContent = repairStatus(state);
+    var warn = $("statusWarn");
+    warn.style.display = complete ? "none" : "block";
+    if(!complete){
+      // Say exactly what is missing — including, in property-manager
+      // mode, which completed items still need a photo.
+      var missing = [];
+      if(!state.items.length){ missing.push("add at least one work item"); }
+      else if(itemsDocumented(state) < state.items.length){
+        missing.push("give every work item a status (" + itemsDocumented(state) +
+                     " of " + state.items.length + " set)");
+      }
+      if(timeOnSiteMinutes(state) === null){ missing.push("set arrival and departure times"); }
+      if(pmModeOn){
+        var noPhoto = completedItemsMissingPhotos(state);
+        if(noPhoto.length){
+          missing.push("property-manager mode: add at least one photo to " +
+            noPhoto.map(function(it){ return "\u201C" + (it.title || "Work item") + "\u201D"; }).join(", "));
+        }
+      }
+      warn.textContent = "Not complete yet: " + missing.join("; ") + ".";
+    }
+    renderPreview();
+  }
+
+  function renderPreview(){
+    var box = $("previewBox");
+    if(!box || !state){ return; }
+    box.innerHTML = "";
+    var settings = loadSettings();
+    function line(txt, cls){
+      var p = document.createElement("div");
+      p.className = "pv-line" + (cls ? " " + cls : "");
+      p.textContent = txt;
+      box.appendChild(p);
+      return p;
+    }
+    var co = document.createElement("div");
+    co.className = "pv-co";
+    co.textContent = settings.companyName || $("companyName").value.trim() || "Your Handyman Company";
+    box.appendChild(co);
+    var title = document.createElement("div");
+    title.className = "pv-title";
+    title.textContent = "Visit Service Report";
+    box.appendChild(title);
+    line("Client: " + (state.client || "—") + (state.address ? " · " + state.address : ""), "mut");
+    var rl = refsLine(state);
+    if(rl){ line(rl, "mut"); }
+    line("Date: " + fmtDate(state.date) + " · Visit type: " + state.visitType, "mut");
+    var mins = timeOnSiteMinutes(state);
+    line("On site: " + (mins === null ? "times not set yet" : fmtTime(state.arrival) + " – " + fmtTime(state.departure) + " (" + fmtHours(mins) + " hrs)"), "mut");
+
+    line("Work performed", "head");
+    if(!state.items.length){ line("No work items yet.", "mut"); }
+    state.items.forEach(function(it){
+      line((it.title || "Work item") + " · " + (it.status || "Status not set") +
+           " · Before: " + (it.beforeIds || []).length + " · After: " + (it.afterIds || []).length);
+      if(it.description){ line(it.description, "mut"); }
+    });
+
+    line("Issues found", "head");
+    if(!state.issues.length){ line("No issues found.", "mut"); }
+    state.issues.forEach(function(it){
+      line((it.item || "Issue") + " (" + (it.severity || "Low") + ")" + (it.needsReturn ? " — needs a return visit" : ""));
+      if(it.recommendation){ line("Recommendation: " + it.recommendation, "mut"); }
+    });
+
+    var steps = nextSteps(state);
+    if(steps.length){
+      line("Recommended next steps", "head");
+      steps.forEach(function(s){
+        line("Return visit: " + s.title + (s.note ? " — " + s.note : ""));
+      });
+    }
+
+    line("Charges", "head");
+    var ch = charges(state);
+    ch.lines.forEach(function(l){
+      line((l.name || "Part") + " × " + l.qty + " — " + money(l.line));
+    });
+    if(num(state.laborHours) > 0 || num(state.laborRate) > 0){
+      line("Labor — " + state.laborHours + " hrs × " + money(state.laborRate) + " — " + money(ch.laborTotal));
+    }
+    if(ch.tripFee > 0){ line("Trip / call-out fee — " + money(ch.tripFee)); }
+    if(ch.tax > 0){ line("Tax (" + state.taxPct + "%) — " + money(ch.tax)); }
+    line("Amount due: " + money(ch.total) + (state.paymentTerms ? " — " + state.paymentTerms : ""), "total");
+
+    var complete = computeComplete(state);
+    var v = document.createElement("div");
+    v.className = "pv-verdict " + (complete ? "yes" : "no");
+    v.textContent = "Documentation status: " + (complete ? "COMPLETE" : "INCOMPLETE");
+    box.appendChild(v);
+    var v2 = document.createElement("div");
+    v2.className = "pv-verdict";
+    v2.textContent = "Repair status: " + repairStatus(state);
+    box.appendChild(v2);
+    line(state.ackMode === "remote"
+      ? "Acknowledgment: submitted for approval — no signature collected."
+      : (state.ackMode === "manager"
+        ? "Acknowledgment: property manager signature on the PDF."
+        : "Acknowledgment: customer signature on the PDF."), "mut");
+    $("previewWatermark").style.display = isPro() ? "none" : "flex";
+  }
+
+  function renderAll(){
+    renderItems();
+    renderIssues();
+    renderParts();
+    updateSummary();
+  }
+
+  // ---- History (Pro) ----
+  function renderHistory(){
+    var visits = loadVisits();
+    var tot = historyTotals(visits, new Date());
+    $("totMonth").textContent = tot.thisMonth;
+    $("totBilledMonth").textContent = money(tot.billedThisMonth);
+    $("totAll").textContent = tot.total;
+    $("totBilledAll").textContent = money(tot.billedAllTime);
+    $("totAwaiting").textContent = money(tot.awaitingPayment);
+
+    var box = $("historyList");
+    box.innerHTML = "";
+    if(!visits.length){
+      var p = document.createElement("p");
+      p.className = "empty-note";
+      p.textContent = "No saved visits yet. Finish a visit above and save it here.";
+      box.appendChild(p);
+      return;
+    }
+    visits.forEach(function(v){
+      var row = document.createElement("div");
+      row.className = "saved-item";
+      var chip = document.createElement("span");
+      chip.className = "chip " + (v.complete ? "chip-ready" : "chip-notready");
+      chip.textContent = v.complete ? "DOCS COMPLETE" : "DOCS INCOMPLETE";
+      chip.title = "Documentation status";
+      row.appendChild(chip);
+      var name = document.createElement("span");
+      name.className = "name";
+      name.textContent = v.client || "Unnamed client";
+      row.appendChild(name);
+      var meta = document.createElement("span");
+      meta.className = "meta";
+      var ic = (v.items || []).length;
+      var rs = (typeof v.repairStatus === "string" && v.repairStatus) ? v.repairStatus : repairStatus(v);
+      meta.textContent = fmtDate(v.date) + " · " + money(v.amountDue) + " · " + ic + (ic === 1 ? " item" : " items") +
+        " · Repairs: " + rs;
+      row.appendChild(meta);
+      var rl = refsLine(v);
+      if(rl){
+        var refs = document.createElement("span");
+        refs.className = "meta";
+        refs.textContent = rl;
+        row.appendChild(refs);
+      }
+      if(v.evidenceExported){
+        var pk = document.createElement("span");
+        pk.className = "meta pack-note";
+        pk.textContent = "Evidence pack exported ✓ — that ZIP is your own backup copy. Keep it somewhere safe (Drive, Dropbox…); we don't store it.";
+        row.appendChild(pk);
+      }
+      var payLbl = document.createElement("span");
+      payLbl.className = "pay-lbl";
+      payLbl.textContent = "Payment:";
+      row.appendChild(payLbl);
+      var paySel = document.createElement("select");
+      paySel.className = "pay-status";
+      paySel.setAttribute("data-id", v.id);
+      PAY_STATUSES.forEach(function(ps){
+        var o = document.createElement("option");
+        o.value = ps; o.textContent = ps;
+        paySel.appendChild(o);
+      });
+      paySel.value = PAY_STATUSES.indexOf(v.payStatus) >= 0 ? v.payStatus : "Unbilled";
+      row.appendChild(paySel);
+      [["Load","hist-load"],["Start similar","hist-similar"],["PDF","hist-pdf"],["Evidence pack","hist-pack"],["Delete","hist-del"]].forEach(function(pair){
+        var b = document.createElement("button");
+        b.type = "button"; b.className = "btn btn-ghost btn-small " + pair[1];
+        b.setAttribute("data-id", v.id);
+        b.textContent = pair[0];
+        row.appendChild(b);
+      });
+      box.appendChild(row);
+    });
+  }
+
+  function loadRecordIntoState(rec){
+    state = normalizeState(clone(rec));
+    syncHeaderFields();
+    renderAll();
+    saveDraft();
+  }
+
+  $("historyList").addEventListener("click", function(ev){
+    var t = ev.target;
+    if(!t || !t.getAttribute){ return; }
+    var id = t.getAttribute("data-id");
+    var visits = loadVisits();
+    var rec = null;
+    visits.forEach(function(x){ if(x.id === id){ rec = x; } });
+    if(!rec){ return; }
+    if(t.className.indexOf("hist-load") >= 0){
+      loadRecordIntoState(rec);
+    } else if(t.className.indexOf("hist-similar") >= 0){
+      state = similarVisitState(rec);
+      syncHeaderFields();
+      renderAll();
+      saveDraft();
+      window.scrollTo(0, 0);
+    } else if(t.className.indexOf("hist-pdf") >= 0){
+      if(!isPro()){ proAlert("The PDF visit report"); return; }
+      generateReport(rec, {});
+    } else if(t.className.indexOf("hist-pack") >= 0){
+      if(!isPro()){ proAlert("The evidence pack"); return; }
+      buildEvidencePack(rec);
+    } else if(t.className.indexOf("hist-del") >= 0){
+      (rec.items || []).forEach(function(it){
+        (it.beforeIds || []).concat(it.afterIds || []).forEach(function(pid){ PhotoStore.del(pid); });
+      });
+      storeVisits(visits.filter(function(x){ return x.id !== id; }));
+      renderHistory();
+      updateStorageNote();
+    }
+  });
+
+  $("historyList").addEventListener("change", function(ev){
+    var t = ev.target;
+    if(!t || !t.getAttribute || t.className.indexOf("pay-status") < 0){ return; }
+    var id = t.getAttribute("data-id");
+    var visits = loadVisits();
+    var changed = false;
+    visits.forEach(function(v){
+      if(v.id === id){
+        v.payStatus = PAY_STATUSES.indexOf(t.value) >= 0 ? t.value : "Unbilled";
+        changed = true;
+      }
+    });
+    if(changed){ storeVisits(visits); renderHistory(); }
+  });
+
+  $("saveVisitBtn").addEventListener("click", function(){
+    if(!isPro()){ proAlert("Saving visits to history"); return; }
+    saveDraft();
+    var rec = makeRecord(state);
+    var visits = loadVisits();
+    visits.unshift(rec);
+    storeVisits(visits);
+    renderHistory();
+    alert("Visit saved: " + (rec.client || "Unnamed client") + " — Documentation: " + (rec.complete ? "COMPLETE" : "INCOMPLETE") +
+          ", repairs: " + rec.repairStatus + ", amount due " + money(rec.amountDue) + ".");
+  });
+
+  // ---- Downloads: backup JSON (includes photos) ----
+  function download(filename, content, type){
+    var blob = content instanceof Blob ? content : new Blob([content], {type: type});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url; a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 500);
+  }
+
+  function collectPhotoIds(){
+    var ids = {};
+    function scanItems(items){
+      (items || []).forEach(function(it){
+        (it.beforeIds || []).forEach(function(p){ ids[p] = true; });
+        (it.afterIds || []).forEach(function(p){ ids[p] = true; });
+      });
+    }
+    if(state){ scanItems(state.items); }
+    loadVisits().forEach(function(v){ scanItems(v.items); });
+    return Object.keys(ids);
+  }
+
+  function buildBackup(){
+    var ids = collectPhotoIds();
+    var photos = {};
+    var chain = Promise.resolve();
+    ids.forEach(function(id){
+      chain = chain.then(function(){
+        return PhotoStore.get(id).then(function(url){ if(url){ photos[id] = url; } });
+      });
+    });
+    return chain.then(function(){
+      return {
+        app: "FixVisit Report", version: 1,
+        exportedAt: new Date().toISOString(),
+        pro: isPro(),
+        settings: loadSettings(),
+        profiles: loadProfiles(),
+        visits: loadVisits(),
+        draft: lsGet(DRAFT_KEY, null),
+        photos: photos
+      };
+    });
+  }
+
+  $("exportBackupBtn").addEventListener("click", function(){
+    buildBackup().then(function(payload){
+      download("fixvisit-backup-" + new Date().toISOString().slice(0,10) + ".json",
+               JSON.stringify(payload, null, 2), "application/json");
+    });
+  });
+
+  // ---- History CSV export (Pro): one row per saved visit, with the
+  // reference numbers and both statuses, for the contractor's own books
+  // or to send a property manager a month-end summary.
+  function csvCell(v){
+    var s = String(v === null || v === undefined ? "" : v);
+    return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  }
+  function buildHistoryCsv(visits){
+    var head = ["Date","Report ID","Client","Address","Unit","Work order #","PO #","Invoice ref",
+                "Visit type","Documentation status","Repair status","Payment status",
+                "Work items","Issues","Photos","Amount due"];
+    var rows = [head.join(",")];
+    (visits || []).forEach(function(v){
+      var s = normalizeState(v);
+      rows.push([
+        s.date, reportId(v), s.client, s.address, s.unit, s.workOrder, s.poNumber, s.invoiceRef,
+        s.visitType, v.complete ? "COMPLETE" : "INCOMPLETE",
+        (typeof v.repairStatus === "string" && v.repairStatus) ? v.repairStatus : repairStatus(s),
+        s.payStatus, s.items.length, s.issues.length, countPhotos(s), num(v.amountDue).toFixed(2)
+      ].map(csvCell).join(","));
+    });
+    return rows.join("\n");
+  }
+  $("exportCsvBtn").addEventListener("click", function(){
+    download("fixvisit-history-" + new Date().toISOString().slice(0,10) + ".csv",
+             buildHistoryCsv(loadVisits()), "text/csv");
+  });
+
+  $("importInput").addEventListener("change", function(){
+    var f = $("importInput").files && $("importInput").files[0];
+    if(!f){ return; }
+    var reader = new FileReader();
+    reader.onload = function(){
+      var data;
+      try {
+        data = JSON.parse(String(reader.result || ""));
+        if(!data || data.app !== "FixVisit Report" || !Array.isArray(data.visits)){ throw new Error("bad file"); }
+      } catch(e){
+        alert("That file doesn't look like a FixVisit Report backup. Nothing was changed.");
+        $("importInput").value = "";
+        return;
+      }
+      storeVisits(data.visits.map(function(v){ return normalizeState(v); }).map(function(s, i){
+        // Keep each record's snapshot fields (id, amountDue, complete…) intact.
+        var orig = data.visits[i];
+        s.id = orig.id || uid();
+        s.amountDue = num(orig.amountDue);
+        s.complete = !!orig.complete;
+        s.repairStatus = (typeof orig.repairStatus === "string" && orig.repairStatus)
+          ? orig.repairStatus : repairStatus(s);
+        s.evidenceExported = !!orig.evidenceExported;
+        s.createdAt = orig.createdAt || "";
+        return s;
+      }));
+      if(Array.isArray(data.profiles)){ storeProfiles(data.profiles); renderProfiles(); }
+      if(data.settings){ lsSet(SETTINGS_KEY, data.settings); logoDataUrl = ""; applySettings(); }
+      if(data.pro){ try { localStorage.setItem(PRO_KEY, "1"); } catch(e){ /* ignore */ } }
+      if(data.draft){ lsSet(DRAFT_KEY, data.draft); }
+      var photos = data.photos || {};
+      var chain = Promise.resolve();
+      Object.keys(photos).forEach(function(id){
+        chain = chain.then(function(){ return PhotoStore.put(id, photos[id]); });
+      });
+      chain.then(function(){
+        if(!loadDraft()){
+          state = freshState();
+        }
+        syncHeaderFields();
+        renderPro();
+        renderAll();
+        updateStorageNote();
+        alert("Backup restored: " + data.visits.length + " visit(s), " +
+              Object.keys(photos).length + " photo(s) imported.");
+        $("importInput").value = "";
+      });
+    };
+    reader.onerror = function(){ alert("That file couldn't be read. Nothing was changed."); };
+    reader.readAsText(f);
+  });
+
+  // ---- Storage note ----
+  function updateStorageNote(){
+    var el = $("storageNote");
+    if(!el){ return; }
+    if(PhotoStore.isMemoryFallback()){
+      el.textContent = "Photo storage: IndexedDB isn't available in this browser, so photos are being kept in memory only and will be lost when this tab closes. Export backups often.";
+      return;
+    }
+    PhotoStore.keys().then(function(keys){
+      var base = "Photo storage: " + keys.length + " photo(s) stored in this browser's IndexedDB.";
+      if(typeof navigator !== "undefined" && navigator.storage && navigator.storage.estimate){
+        navigator.storage.estimate().then(function(est){
+          if(est && typeof est.usage === "number"){
+            el.textContent = base + " This site is using about " + (est.usage / 1048576).toFixed(1) +
+              " MB of device storage. Photos add up — export a backup and clear old visits you no longer need.";
+          } else { el.textContent = base; }
+        }).catch(function(){ el.textContent = base; });
+      } else { el.textContent = base; }
+    });
+  }
+
+  // ---- Branded PDF visit report ----
+  function loadImg(dataUrl){
+    return new Promise(function(resolve){
+      if(typeof Image === "undefined" || !dataUrl){ resolve(null); return; }
+      var im = new Image();
+      im.onload = function(){ resolve(im); };
+      im.onerror = function(){ resolve(null); };
+      im.src = dataUrl;
+    });
+  }
+
+  function reportFilename(rec){
+    return "fixvisit-report-" + String(rec.date || "").slice(0,10) + ".pdf";
+  }
+
+  // Load logo + every referenced photo; resolves to everything the PDF
+  // builder and the evidence-pack builder need.
+  function loadReportAssets(rec){
+    var settings = loadSettings();
+    var flat = [];
+    (rec.items || []).forEach(function(it){
+      (it.beforeIds || []).forEach(function(pid){ flat.push(pid); });
+      (it.afterIds || []).forEach(function(pid){ flat.push(pid); });
+    });
+    var urlById = {};
+    var chain = Promise.resolve();
+    flat.forEach(function(pid){
+      chain = chain.then(function(){
+        return PhotoStore.get(pid).then(function(url){ if(url){ urlById[pid] = url; } });
+      });
+    });
+    return chain.then(function(){
+      var imgJobs = flat.map(function(pid){
+        return urlById[pid] ? loadImg(urlById[pid]).then(function(im){ return { id: pid, img: im, url: urlById[pid] }; })
+                            : Promise.resolve({ id: pid, img: null, url: null });
+      });
+      return Promise.all([loadImg(settings.logo || logoDataUrl || "")].concat(imgJobs)).then(function(results){
+        var imgById = {};
+        results.slice(1).forEach(function(r){ if(r.img){ imgById[r.id] = r; } });
+        return { settings: settings, logoIm: results[0], imgById: imgById, urlById: urlById };
+      });
+    });
+  }
+
+  // Gating (Pro or the one free report) is the caller's job — this just builds.
+  function generateReport(rec, opts){
+    opts = opts || {};
+    if(!window.jspdf || !window.jspdf.jsPDF){
+      alert("The PDF library couldn't load. Check your internet connection and try again — everything else on this page works offline.");
+      return Promise.resolve(false);
+    }
+    return loadReportAssets(rec).then(function(assets){
+      var doc = buildPdfDoc(rec, assets.settings, assets.logoIm, assets.imgById);
+      doc.save(reportFilename(rec));
+      if(opts.onDone){ opts.onDone(); }
+      return true;
+    });
+  }
+
+  function buildPdfDoc(rec, settings, logoIm, imgById){
+    var jsPDF = window.jspdf.jsPDF;
+    var doc = new jsPDF({unit:"pt", format:"letter"});
+    var pageW = doc.internal.pageSize.getWidth();
+    var pageH = doc.internal.pageSize.getHeight();
+    var marginX = 56;
+    var y = 60;
+
+    function ensureSpace(h){
+      if(y + h > pageH - 56){ doc.addPage(); y = 60; }
+    }
+    function sectionHead(txt){
+      ensureSpace(34);
+      doc.setFont("helvetica","bold"); doc.setFontSize(12.5); doc.setTextColor(42,33,26);
+      doc.text(txt, marginX, y); y += 18;
+      doc.setFont("helvetica","normal"); doc.setFontSize(11.5);
+    }
+    function wrapped(txt, indent){
+      doc.splitTextToSize(String(txt || ""), pageW - marginX * 2 - (indent || 0)).forEach(function(line){
+        ensureSpace(15);
+        doc.text(line, marginX + (indent || 0), y); y += 15;
+      });
+    }
+    function drawPhotoRow(items){
+      var x = marginX;
+      var rowH = 0;
+      var sized = items.map(function(it){
+        var w = it.img.naturalWidth || it.img.width || 0;
+        var h = it.img.naturalHeight || it.img.height || 0;
+        if(!w || !h){ return null; }
+        var scale = Math.min(170 / w, 130 / h);
+        return { url: it.url, w: Math.round(w * scale), h: Math.round(h * scale) };
+      }).filter(function(s){ return !!s; });
+      if(!sized.length){ return; }
+      sized.forEach(function(s){ rowH = Math.max(rowH, s.h); });
+      ensureSpace(rowH + 8);
+      sized.forEach(function(s){
+        var fmt = s.url.indexOf("data:image/png") === 0 ? "PNG" : "JPEG";
+        try { doc.addImage(s.url, fmt, x, y, s.w, s.h); } catch(e){ /* skip bad image */ }
+        x += s.w + 14;
+      });
+      y += rowH + 10;
+    }
+    function photoBlock(ids, label){
+      var pics = (ids || []).map(function(pid){ return imgById[pid]; }).filter(function(x){ return !!x; });
+      if(!pics.length){ return; }
+      ensureSpace(16);
+      doc.setFontSize(10.5); doc.setTextColor(111,97,86);
+      doc.text(label, marginX + 6, y); y += 6;
+      doc.setTextColor(42,33,26); doc.setFontSize(11.5);
+      for(var i = 0; i < pics.length; i += 2){ drawPhotoRow(pics.slice(i, i + 2)); }
+    }
+    function chargeLine(label, amount){
+      ensureSpace(16);
+      doc.setTextColor(42,33,26);
+      doc.text(label, marginX, y);
+      doc.text(amount, pageW - marginX, y, {align: "right"});
+      y += 16;
+    }
+
+    var company = settings.companyName || $("companyName").value.trim() || "Your Handyman Company";
+    var contact = [settings.companyPhone || $("companyPhone").value.trim(),
+                   settings.companyEmail || $("companyEmail").value.trim()]
+                   .filter(function(s){ return !!s; }).join("  ·  ");
+
+    // Header: logo, company, contact
+    if(logoIm && (logoIm.naturalWidth || logoIm.width)){
+      var lw = logoIm.naturalWidth || logoIm.width, lh = logoIm.naturalHeight || logoIm.height;
+      var ls = Math.min(150 / lw, 42 / lh);
+      var logoUrl = settings.logo || logoDataUrl;
+      try {
+        doc.addImage(logoUrl, logoUrl.indexOf("data:image/png") === 0 ? "PNG" : "JPEG",
+                     marginX, y - 8, Math.round(lw * ls), Math.round(lh * ls));
+        y += Math.round(lh * ls) + 14;
+      } catch(e){ /* skip logo */ }
+    }
+    doc.setFont("helvetica","bold"); doc.setFontSize(20); doc.setTextColor(42,33,26);
+    doc.text(company, marginX, y); y += 16;
+    if(contact){
+      doc.setFont("helvetica","normal"); doc.setFontSize(10.5); doc.setTextColor(111,97,86);
+      doc.text(contact, marginX, y); y += 8;
+    }
+    doc.setDrawColor(221,98,18); doc.setLineWidth(2.5);
+    doc.line(marginX, y, pageW - marginX, y); y += 30;
+
+    doc.setTextColor(42,33,26); doc.setFontSize(15);
+    doc.text("Visit Service Report", marginX, y); y += 22;
+    doc.setFont("helvetica","normal"); doc.setFontSize(11.5); doc.setTextColor(111,97,86);
+    doc.text("Client: " + (rec.client || "—") + (rec.address ? " · " + rec.address : ""), marginX, y); y += 16;
+    var refs = refsLine(rec);
+    if(refs){ doc.text(refs, marginX, y); y += 16; }
+    if(reportId(rec)){ doc.text("Report ID: " + reportId(rec), marginX, y); y += 16; }
+    var mins = timeOnSiteMinutes(rec);
+    doc.text("Date: " + fmtDate(rec.date) + " · Visit type: " + (rec.visitType || "Repair"), marginX, y); y += 16;
+    doc.text("On site: " + (mins === null ? "—" : fmtTime(rec.arrival) + " – " + fmtTime(rec.departure) + " (" + fmtHours(mins) + " hrs)"), marginX, y); y += 16;
+    doc.setTextColor(42,33,26); y += 6;
+
+    // Two separate statuses, always: whether the DOCUMENTATION is
+    // complete, and whether the REPAIRS are finished. They are not the
+    // same claim — a fully documented visit can still need a return trip.
+    var complete = (typeof rec.complete === "boolean") ? rec.complete : computeComplete(rec);
+    var rStatus = (typeof rec.repairStatus === "string" && rec.repairStatus) ? rec.repairStatus : repairStatus(rec);
+    doc.setFont("helvetica","bold"); doc.setFontSize(13);
+    doc.text("Documentation status: ", marginX, y);
+    if(complete){ doc.setTextColor(179,77,10); doc.text("COMPLETE", marginX + 168, y); }
+    else { doc.setTextColor(159,39,39); doc.text("INCOMPLETE", marginX + 168, y); }
+    doc.setTextColor(42,33,26); y += 20;
+    doc.text("Repair status: ", marginX, y);
+    doc.setFont("helvetica","normal");
+    doc.text(rStatus, marginX + 168, y);
+    doc.setFontSize(11.5);
+    y += 26;
+
+    // Work performed
+    sectionHead("Work performed (" + ((rec.items || []).length) + ")");
+    if(!(rec.items || []).length){
+      doc.setTextColor(111,97,86);
+      doc.text("No work items were recorded for this visit.", marginX, y);
+      doc.setTextColor(42,33,26); y += 18;
+    } else {
+      rec.items.forEach(function(it){
+        ensureSpace(34);
+        doc.setFont("helvetica","bold"); doc.setFontSize(11.5);
+        doc.text((it.title || "Work item") + " · " + (it.status || "Status not set"), marginX, y);
+        doc.setFont("helvetica","normal"); y += 16;
+        if(it.description){
+          doc.setTextColor(111,97,86);
+          wrapped(it.description, 6);
+          doc.setTextColor(42,33,26);
+        }
+        photoBlock(it.beforeIds, "Before photos");
+        photoBlock(it.afterIds, "After photos");
+        y += 6;
+      });
+    }
+    y += 6;
+
+    // Issues found
+    sectionHead("Issues found (" + ((rec.issues || []).length) + ")");
+    if(!(rec.issues || []).length){
+      doc.setTextColor(111,97,86);
+      doc.text("No issues were found during this visit.", marginX, y);
+      doc.setTextColor(42,33,26); y += 18;
+    } else {
+      rec.issues.forEach(function(it){
+        ensureSpace(34);
+        doc.setFont("helvetica","bold"); doc.setFontSize(11.5);
+        doc.text((it.item || "Issue") + " · Severity: " + (it.severity || "Low") +
+                 (it.needsReturn ? " · Needs a return visit" : ""), marginX, y);
+        doc.setFont("helvetica","normal"); y += 16;
+        if(it.recommendation){
+          doc.setTextColor(111,97,86);
+          wrapped("Recommendation: " + it.recommendation, 6);
+          doc.setTextColor(42,33,26);
+        }
+        y += 6;
+      });
+    }
+    y += 6;
+
+    // Recommended next steps
+    var steps = nextSteps(rec);
+    if(steps.length){
+      sectionHead("Recommended next steps");
+      steps.forEach(function(s){
+        ensureSpace(16);
+        doc.text("Return visit: " + s.title, marginX, y); y += 16;
+        if(s.note){
+          doc.setTextColor(111,97,86);
+          wrapped(s.note, 6);
+          doc.setTextColor(42,33,26);
+        }
+      });
+      y += 10;
+    }
+
+    // Charges
+    sectionHead("Charges");
+    var ch = charges(rec);
+    ch.lines.forEach(function(l){
+      chargeLine((l.name || "Part") + " × " + l.qty + " @ " + money(l.unitPrice), money(l.line));
+    });
+    if(num(rec.laborHours) > 0 || num(rec.laborRate) > 0 || ch.laborTotal > 0){
+      chargeLine("Labor — " + rec.laborHours + " hrs × " + money(rec.laborRate), money(ch.laborTotal));
+    }
+    if(ch.tripFee > 0){ chargeLine("Trip / call-out fee", money(ch.tripFee)); }
+    chargeLine("Subtotal", money(ch.subtotal));
+    if(ch.tax > 0){ chargeLine("Tax (" + rec.taxPct + "%)", money(ch.tax)); }
+    ensureSpace(22);
+    doc.setDrawColor(42,33,26); doc.setLineWidth(1.2);
+    doc.line(marginX, y - 6, pageW - marginX, y - 6);
+    doc.setFont("helvetica","bold"); doc.setFontSize(13.5);
+    doc.text("Amount due", marginX, y + 8);
+    doc.text(money(ch.total), pageW - marginX, y + 8, {align: "right"});
+    doc.setFont("helvetica","normal"); doc.setFontSize(11.5);
+    y += 28;
+    if(rec.paymentTerms){
+      doc.setTextColor(111,97,86);
+      doc.text("Payment terms: " + rec.paymentTerms, marginX, y);
+      doc.setTextColor(42,33,26); y += 20;
+    }
+    y += 8;
+
+    // Acknowledgment — the sign-off block adapts to how this report is
+    // being approved: signed on site, signed by the property manager, or
+    // submitted electronically for remote approval (no signature lines).
+    var ack = ACK_MODES.indexOf(rec.ackMode) >= 0 ? rec.ackMode : "onsite";
+    if(ack === "remote"){
+      ensureSpace(70);
+      doc.setFont("helvetica","bold"); doc.setFontSize(12);
+      doc.text("Submitted for approval", marginX, y); y += 18;
+      doc.setFont("helvetica","normal"); doc.setFontSize(10.5); doc.setTextColor(111,97,86);
+      wrapped("This report was submitted electronically for review and approval. No signature was collected on site. The amount due becomes payable on approval, under the payment terms above.", 0);
+      y += 16;
+    } else {
+      ensureSpace(86);
+      doc.setFont("helvetica","bold"); doc.setFontSize(12);
+      doc.text(ack === "manager" ? "Property manager acknowledgment" : "Customer acknowledgment", marginX, y); y += 18;
+      doc.setFont("helvetica","normal"); doc.setFontSize(10.5); doc.setTextColor(111,97,86);
+      wrapped(ack === "manager"
+        ? "I confirm the work described above was performed as documented, and this report is approved for payment processing."
+        : "I confirm the work described above was performed as documented, and I have received this report.", 0);
+      y += 12;
+      var colW = (pageW - marginX * 2 - 30) / 2;
+      doc.setDrawColor(42,33,26); doc.setLineWidth(0.8);
+      doc.line(marginX, y, marginX + colW, y);
+      doc.line(marginX + colW + 30, y, marginX + colW * 2 + 30, y);
+      y += 15;
+      doc.text(ack === "manager" ? "Property manager signature" : "Customer signature", marginX, y);
+      doc.text("Printed name & date", marginX + colW + 30, y);
+      y += 28;
+    }
+    doc.setFontSize(9.5);
+    doc.text("Report generated with FixVisit Report · " + company + (contact ? " · " + contact : ""), marginX, y);
+
+    return doc;
+  }
+
+  // ---- Evidence pack (Pro): report PDF + ORIGINAL photos + data record,
+  // zipped in the browser. The pack is the user's own backup — we never
+  // store a copy, and the saved visit is flagged once one is exported.
+  function dataUrlToBase64(url){
+    var i = String(url || "").indexOf(",");
+    return i >= 0 ? String(url).slice(i + 1) : String(url || "");
+  }
+  function safeName(s, fallback){
+    var out = String(s || "").replace(/[^A-Za-z0-9]+/g, "_").replace(/^_+|_+$/g, "").slice(0, 44);
+    return out || fallback || "photo";
+  }
+
+  // SHA-256 of a byte array, computed locally (Web Crypto). Resolves to a
+  // lowercase hex string, or null when hashing isn't available. Honest
+  // limit: a hash shows whether an exported file changed AFTER export —
+  // it does not prove when a photo was taken or that work was performed.
+  function sha256Hex(bytes){
+    if(typeof crypto === "undefined" || !crypto.subtle || !crypto.subtle.digest){
+      return Promise.resolve(null);
+    }
+    return crypto.subtle.digest("SHA-256", bytes).then(function(buf){
+      var arr = new Uint8Array(buf);
+      var hex = "";
+      for(var i = 0; i < arr.length; i++){ hex += ("0" + arr[i].toString(16)).slice(-2); }
+      return hex;
+    }).catch(function(){ return null; });
+  }
+  function base64ToBytes(b64){
+    var bin = atob(String(b64 || ""));
+    var arr = new Uint8Array(bin.length);
+    for(var i = 0; i < bin.length; i++){ arr[i] = bin.charCodeAt(i); }
+    return arr;
+  }
+  function textToBytes(s){
+    if(typeof TextEncoder !== "undefined"){ return new TextEncoder().encode(s); }
+    var arr = new Uint8Array(String(s).length);
+    for(var i = 0; i < String(s).length; i++){ arr[i] = String(s).charCodeAt(i) & 0xff; }
+    return arr;
+  }
+
+  function buildEvidencePack(rec){
+    if(!window.jspdf || !window.jspdf.jsPDF){
+      alert("The PDF library couldn't load. Check your internet connection and try again.");
+      return;
+    }
+    if(!window.JSZip){
+      alert("The ZIP library couldn't load. Check your internet connection and try again — the report PDF button still works on its own.");
+      return;
+    }
+    loadReportAssets(rec).then(function(assets){
+      var doc = buildPdfDoc(rec, assets.settings, assets.logoIm, assets.imgById);
+      var zip = new window.JSZip();
+
+      // Collect every content file first (name + ZIP payload + bytes to
+      // hash), so the manifest and the checksums file can carry real hashes.
+      var entries = []; // { name, data, opts, bytes:Promise<Uint8Array> }
+      function addEntry(name, data, opts, bytesPromise){
+        entries.push({ name: name, data: data, opts: opts, bytes: bytesPromise, hash: null });
+      }
+
+      var pdfName = reportFilename(rec);
+      var pdfBlob = doc.output("blob");
+      addEntry(pdfName, pdfBlob, null,
+               pdfBlob.arrayBuffer ? pdfBlob.arrayBuffer().then(function(ab){ return new Uint8Array(ab); })
+                                   : Promise.resolve(new Uint8Array(0)));
+
+      (rec.items || []).forEach(function(it){
+        [["beforeIds","Before"],["afterIds","After"]].forEach(function(pair){
+          var n = 0;
+          (it[pair[0]] || []).forEach(function(pid){
+            var url = assets.urlById[pid];
+            if(!url){ return; }
+            n++;
+            var b64 = dataUrlToBase64(url);
+            addEntry("Work_Item_Photos/" + safeName(it.title, "Work_Item") + "_" + pair[1] + "_" + n + ".jpg",
+                     b64, {base64: true}, Promise.resolve(base64ToBytes(b64)));
+          });
+        });
+      });
+
+      var recordJson = clone(rec);
+      recordJson.exportedAt = new Date().toISOString();
+      var recordText = JSON.stringify(recordJson, null, 2);
+      addEntry("Visit_Record.json", recordText, null, Promise.resolve(textToBytes(recordText)));
+
+      // Hash every content file, then write the manifest (with hash
+      // entries), hash the manifest too, and finish with the checksums
+      // file covering everything except itself.
+      var chain = Promise.resolve();
+      entries.forEach(function(e){
+        chain = chain.then(function(){
+          return e.bytes.then(function(b){ return sha256Hex(b); }).then(function(h){ e.hash = h; });
+        });
+      });
+      return chain.then(function(){
+        var fileList = entries.map(function(e){ return e.name; })
+                              .concat(["Report_Manifest.txt", "SHA256_Checksums.txt"]);
+        var mins = timeOnSiteMinutes(rec);
+        var rStatus = (typeof rec.repairStatus === "string" && rec.repairStatus) ? rec.repairStatus : repairStatus(rec);
+        var lines = [
+          "FixVisit Report — Evidence Pack",
+          "Report ID: " + reportId(rec),
+          "Client: " + (rec.client || "") + (rec.address ? " · " + rec.address : "")
+        ];
+        var rl = refsLine(rec);
+        if(rl){ lines.push(rl); }
+        lines = lines.concat([
+          "Visit date: " + fmtDate(rec.date) + " · Type: " + (rec.visitType || ""),
+          "On site: " + (mins === null ? "—" : fmtTime(rec.arrival) + " – " + fmtTime(rec.departure) + " (" + fmtHours(mins) + " hrs)"),
+          "Documentation status: " + (rec.complete ? "COMPLETE" : "INCOMPLETE"),
+          "Repair status: " + rStatus,
+          "Work items: " + ((rec.items || []).length) + " · Issues: " + ((rec.issues || []).length) + " · Photos: " + countPhotos(rec),
+          "Amount due: " + money(rec.amountDue) + " · Payment status: " + (rec.payStatus || "Unbilled"),
+          "",
+          "Files in this pack:"
+        ]).concat(fileList.map(function(f){ return " - " + f; })).concat([
+          "",
+          "SHA-256 checksums:"
+        ]).concat(entries.map(function(e){ return " - " + e.name + " — " + (e.hash || "not computed"); })).concat([
+          "",
+          "SHA-256 hashes show whether exported files changed after export; they do not prove when a photo was taken or that the work was performed.",
+          "This pack is your own backup — keep it somewhere safe (for example Drive or Dropbox).",
+          "FixVisit Report does not store a copy of it."
+        ]);
+        var manifestText = lines.join("\n");
+        return sha256Hex(textToBytes(manifestText)).then(function(mHash){
+          var all = entries.concat([{ name: "Report_Manifest.txt", hash: mHash }]);
+          var checksumLines = all.map(function(e){ return (e.hash || "not-computed") + "  " + e.name; });
+          entries.forEach(function(e){ zip.file(e.name, e.data, e.opts || undefined); });
+          zip.file("Report_Manifest.txt", manifestText);
+          zip.file("SHA256_Checksums.txt", checksumLines.join("\n"));
+          return zip.generateAsync({type: "blob"});
+        });
+      }).then(function(blob){
+        download("fixvisit-evidence-" + safeName(rec.client, "client").toLowerCase() +
+                 "-" + String(rec.date || "").slice(0,10) + ".zip", blob, "application/zip");
+        var visits = loadVisits();
+        var changed = false;
+        visits.forEach(function(v){ if(v.id === rec.id){ v.evidenceExported = true; changed = true; } });
+        if(changed){ storeVisits(visits); }
+        renderHistory();
+        alert("Evidence pack downloaded for " + (rec.client || "this client") +
+              ". Keep it somewhere safe — it's your own backup copy; we don't store it.");
+      });
+    }).catch(function(){
+      alert("The evidence pack couldn't be built. Try again — your saved visit is unchanged.");
+    });
+  }
+
+  $("pdfBtn").addEventListener("click", function(){
+    var pro = isPro();
+    if(!pro && !freeReportAvailable()){ proAlert("The PDF visit report"); return; }
+    saveDraft();
+    var rec = makeRecord(state);
+    generateReport(rec, { onDone: function(){
+      if(!pro){
+        consumeFreeReport();
+        updatePdfNote();
+      }
+    }});
+  });
+
+  // ---- Pro gate rendering ----
+  function updatePdfNote(){
+    var el = $("pdfNote");
+    if(!el){ return; }
+    if(isPro()){
+      el.textContent = "Your branded report — logo, work items with photos, issues and recommendations, the charges table with the amount due, and a customer acknowledgment block. This is the copy you send the client.";
+    } else if(freeReportAvailable()){
+      el.textContent = "Your first branded PDF report is FREE — no credit card required, no watermark. It carries your logo, work items with photos, issues, and the charges table with the amount due — the copy you send the client. After your free one, reports are a Pro feature.";
+    } else {
+      el.textContent = "Pro feature — you've used your free report. The branded PDF carries your logo, work items with photos, issues, and the charges table with the amount due. It's the copy you send the client.";
+    }
+  }
+  function renderPro(){
+    var pro = isPro();
+    $("proGate").style.display = pro ? "none" : "block";
+    $("proArea").style.display = pro ? "block" : "none";
+    $("previewWatermark").style.display = pro ? "none" : "flex";
+    updatePdfNote();
+    if(pro){ renderHistory(); }
+  }
+  $("unlockBtn").addEventListener("click", function(){
+    try { localStorage.setItem(PRO_KEY, "1"); } catch(e){ /* ignore */ }
+    renderPro();
+    updateStorageNote();
+  });
+  $("lockBtn").addEventListener("click", function(){
+    try { localStorage.removeItem(PRO_KEY); } catch(e){ /* ignore */ }
+    renderPro();
+  });
+
+  // ---- Init ----
+  // Ask the browser to keep this site's storage persistent (best-effort,
+  // silent) so saved visits and photos are less likely to be evicted.
+  if(typeof navigator !== "undefined" && navigator.storage && navigator.storage.persist){
+    try {
+      var persistReq = navigator.storage.persist();
+      if(persistReq && persistReq.catch){ persistReq.catch(function(){ /* ignore */ }); }
+    } catch(e){ /* ignore */ }
+  }
+  $("subscribeBtn").href = STRIPE_URL;
+  applySettings();
+  if(!loadDraft()){
+    state = freshState();
+  }
+  syncHeaderFields();
+  renderProfiles();
+  renderPro();
+  renderAll();
+  updateStorageNote();
+})();
+</script>
+</body>
+</html>
